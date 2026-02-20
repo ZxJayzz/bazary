@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="56" fill="#FF6F0F"/>
+  <circle cx="60" cy="60" r="52" fill="#FF8534"/>
+
+  <!-- Lemur face - white area -->
+  <ellipse cx="60" cy="66" rx="28" ry="30" fill="white"/>
+
+  <!-- Ears -->
+  <ellipse cx="36" cy="36" rx="10" ry="14" fill="white" transform="rotate(-15 36 36)"/>
+  <ellipse cx="36" cy="36" rx="7" ry="10" fill="#FFB366" transform="rotate(-15 36 36)"/>
+  <ellipse cx="84" cy="36" rx="10" ry="14" fill="white" transform="rotate(15 84 36)"/>
+  <ellipse cx="84" cy="36" rx="7" ry="10" fill="#FFB366" transform="rotate(15 84 36)"/>
+
+  <!-- Dark patches around eyes -->
+  <ellipse cx="46" cy="58" rx="13" ry="14" fill="#3D3D3D"/>
+  <ellipse cx="74" cy="58" rx="13" ry="14" fill="#3D3D3D"/>
+
+  <!-- Eyes - big and cute -->
+  <ellipse cx="46" cy="58" rx="10" ry="11" fill="white"/>
+  <ellipse cx="74" cy="58" rx="10" ry="11" fill="white"/>
+
+  <!-- Pupils -->
+  <circle cx="48" cy="57" r="6" fill="#2D2D2D"/>
+  <circle cx="76" cy="57" r="6" fill="#2D2D2D"/>
+
+  <!-- Eye sparkles -->
+  <circle cx="50" cy="54" r="2.5" fill="white"/>
+  <circle cx="78" cy="54" r="2.5" fill="white"/>
+  <circle cx="46" cy="59" r="1.2" fill="white"/>
+  <circle cx="74" cy="59" r="1.2" fill="white"/>
+
+  <!-- Nose -->
+  <ellipse cx="60" cy="72" rx="4" ry="3" fill="#3D3D3D"/>
+
+  <!-- Mouth - cute smile -->
+  <path d="M54 76 Q57 80 60 78 Q63 80 66 76" stroke="#3D3D3D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose bridge line -->
+  <line x1="60" y1="75" x2="60" y2="72" stroke="#3D3D3D" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Cheek blush -->
+  <ellipse cx="38" cy="70" rx="5" ry="3.5" fill="#FFB3B3" opacity="0.6"/>
+  <ellipse cx="82" cy="70" rx="5" ry="3.5" fill="#FFB3B3" opacity="0.6"/>
+
+  <!-- Forehead marking -->
+  <path d="M52 44 L60 38 L68 44" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

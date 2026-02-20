@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
 
 export default function LoginPage() {
@@ -54,9 +55,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">B</span>
-              </div>
+              <Image src="/images/logo.svg" alt="Bazary" width={44} height={44} className="rounded-lg" />
               <span className="text-2xl font-bold text-gray-800">{t("common.siteName")}</span>
             </div>
             <h1 className="text-xl font-semibold text-gray-800">{t("auth.loginTitle")}</h1>

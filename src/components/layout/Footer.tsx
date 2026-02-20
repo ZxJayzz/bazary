@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -16,9 +17,7 @@ export default function Footer() {
           {/* About */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">B</span>
-              </div>
+              <Image src="/images/logo.svg" alt="Bazary" width={32} height={32} className="rounded-lg" />
               <span className="text-white font-bold text-lg">{t("common.siteName")}</span>
             </div>
             <p className="text-sm leading-relaxed">{t("footer.aboutText")}</p>
