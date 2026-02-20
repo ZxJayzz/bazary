@@ -67,6 +67,7 @@ export default function NotificationsPage() {
 
     try {
       const res = await fetch(`/api/notifications?limit=${LIMIT}&page=${pageNum}`);
+      if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       const items: Notification[] = Array.isArray(data) ? data : data.notifications || [];
 

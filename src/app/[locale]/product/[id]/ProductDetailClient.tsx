@@ -130,6 +130,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
       try {
         // First try same category
         const res = await fetch(`/api/products?category=${encodeURIComponent(product.category)}&limit=5`);
+        if (!res.ok) throw new Error("Failed");
         const data = await res.json();
         const filtered = (data.products || []).filter((p: Product) => p.id !== product.id).slice(0, 4);
 
@@ -140,6 +141,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
 
         // Fallback: same city
         const cityRes = await fetch(`/api/products?city=${encodeURIComponent(product.city)}&limit=5`);
+        if (!cityRes.ok) throw new Error("Failed");
         const cityData = await cityRes.json();
         const cityFiltered = (cityData.products || []).filter((p: Product) => p.id !== product.id).slice(0, 4);
         setRelatedProducts(cityFiltered);

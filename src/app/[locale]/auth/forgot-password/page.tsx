@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
         showToast(locale === "mg" ? "Tenimiafina voaova" : "Mot de passe réinitialisé avec succès", "success");
         router.push(`/${locale}/auth/login`);
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setError(data.error || (locale === "mg" ? "Nisy olana" : "Erreur"));
       }
     } catch {

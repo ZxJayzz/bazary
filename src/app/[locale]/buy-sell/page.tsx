@@ -47,6 +47,7 @@ function BuySellContent() {
 
       try {
         const res = await fetch(`/api/products?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed");
         const data = await res.json();
         if (page === 1) {
           setProducts(data.products);

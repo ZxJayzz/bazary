@@ -140,7 +140,7 @@ export default function ProfilePage() {
         setNewKeyword("");
         showToast(locale === "mg" ? "Teny fototra nampiana" : "Mot-cl\u00e9 ajout\u00e9", "success");
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         showToast(data.error || "Erreur", "error");
       }
     } catch {

@@ -99,7 +99,7 @@ export default function RegisterPage() {
         showToast(locale === "mg" ? "Kaonty voaforona, mba midira" : "Compte cr\u00e9\u00e9 avec succ\u00e8s, connectez-vous", "success");
         router.push(`/${locale}/auth/login`);
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setError(data.error === "Email already registered"
           ? (locale === "mg" ? "Efa nampiasaina io mailaka io" : "Cet email est d\u00e9j\u00e0 utilis\u00e9")
           : (locale === "mg" ? "Nisy olana" : "Une erreur est survenue")
