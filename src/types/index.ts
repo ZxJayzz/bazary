@@ -6,7 +6,9 @@ export interface Product {
   images: string;
   category: string;
   status: "available" | "reserved" | "sold";
+  negotiable: boolean;
   city: string;
+  bumpedAt: Date | null;
   district: string | null;
   views: number;
   userId: string;
@@ -25,11 +27,13 @@ export interface User {
   city: string;
   district: string | null;
   image: string | null;
+  mannerTemp: number;
   products?: Product[];
   buyerConversations?: Conversation[];
   sellerConversations?: Conversation[];
   sentMessages?: Message[];
   favorites?: Favorite[];
+  reviewsReceived?: Review[];
   createdAt: Date;
 }
 
@@ -83,6 +87,33 @@ export interface Notification {
   link: string | null;
   read: boolean;
   createdAt: Date;
+}
+
+export interface Review {
+  id: string;
+  reviewerId: string;
+  reviewer?: User;
+  reviewedId: string;
+  reviewed?: User;
+  productId: string;
+  rating: number;
+  mannerItems: string; // JSON array
+  content: string | null;
+  createdAt: Date;
+}
+
+export interface PriceProposal {
+  id: string;
+  productId: string;
+  product?: Product;
+  buyerId: string;
+  buyer?: User;
+  sellerId: string;
+  seller?: User;
+  proposedPrice: number;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ProductFilters {

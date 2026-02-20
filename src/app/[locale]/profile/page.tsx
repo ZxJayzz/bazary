@@ -9,6 +9,8 @@ import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
 import { CITIES } from "@/types";
 import type { Product } from "@/types";
+import { useToast } from "@/components/ui/Toast";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface ProfileData {
   id: string;
@@ -21,12 +23,19 @@ interface ProfileData {
   createdAt: string;
 }
 
+interface KeywordAlertData {
+  id: string;
+  keyword: string;
+  createdAt: string;
+}
+
 export default function ProfilePage() {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session, status } = useSession();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +54,12 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Keyword alerts state
+  const [keywordAlerts, setKeywordAlerts] = useState<KeywordAlertData[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [addingKeyword, setAddingKeyword] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -68,7 +83,9 @@ export default function ProfilePage() {
             });
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          showToast("Erreur de chargement du profil", "error");
+        });
     }
   }, [session]);
 
@@ -85,6 +102,57 @@ export default function ProfilePage() {
     }
   }, [session]);
 
+  // Fetch keyword alerts
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch("/api/keyword-alerts")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setKeywordAlerts(data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [session]);
+
+  const handleAddKeyword = async () => {
+    if (!newKeyword.trim() || newKeyword.trim().length < 2) return;
+    setAddingKeyword(true);
+    try {
+      const res = await fetch("/api/keyword-alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: newKeyword.trim() }),
+      });
+      if (res.ok) {
+        const alert = await res.json();
+        setKeywordAlerts((prev) => [alert, ...prev]);
+        setNewKeyword("");
+        showToast(locale === "mg" ? "Teny fototra nampiana" : "Mot-cl\u00e9 ajout\u00e9", "success");
+      } else {
+        const data = await res.json();
+        showToast(data.error || "Erreur", "error");
+      }
+    } catch {
+      showToast("Erreur", "error");
+    } finally {
+      setAddingKeyword(false);
+    }
+  };
+
+  const handleRemoveKeyword = async (id: string) => {
+    try {
+      const res = await fetch(`/api/keyword-alerts?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setKeywordAlerts((prev) => prev.filter((a) => a.id !== id));
+        showToast(locale === "mg" ? "Teny fototra nesorina" : "Mot-cl\u00e9 supprim\u00e9", "success");
+      }
+    } catch {
+      showToast("Erreur", "error");
+    }
+  };
+
   const handleStatusChange = async (productId: string, newStatus: string) => {
     try {
       await fetch(`/api/products/${productId}`, {
@@ -95,19 +163,27 @@ export default function ProfilePage() {
       setProducts((prev) =>
         prev.map((p) => (p.id === productId ? { ...p, status: newStatus as Product["status"] } : p))
       );
-    } catch (error) {
-      console.error("Error updating status:", error);
+      showToast("Statut mis \u00e0 jour", "success");
+    } catch {
+      showToast("Erreur de changement de statut", "error");
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm(t("product.deleteConfirm"))) return;
+  const handleDeleteRequest = (productId: string) => {
+    setDeleteConfirm(productId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    const productId = deleteConfirm;
+    setDeleteConfirm(null);
 
     try {
       await fetch(`/api/products/${productId}`, { method: "DELETE" });
       setProducts((prev) => prev.filter((p) => p.id !== productId));
-    } catch (error) {
-      console.error("Error deleting product:", error);
+      showToast("Produit supprim\u00e9", "success");
+    } catch {
+      showToast("Erreur lors de la suppression", "error");
     }
   };
 
@@ -183,16 +259,19 @@ export default function ProfilePage() {
         setAvatarFile(null);
         setAvatarPreview(null);
         setSuccessMessage(t("profile.editSuccess"));
+        showToast("Profil mis \u00e0 jour avec succ\u00e8s", "success");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         setErrorMessage(
           locale === "mg" ? "Nisy olana tamin'ny fanovana" : "Erreur lors de la modification"
         );
+        showToast("Erreur lors de la sauvegarde", "error");
       }
     } catch {
       setErrorMessage(
         locale === "mg" ? "Nisy olana tamin'ny fanovana" : "Erreur lors de la modification"
       );
+      showToast("Erreur lors de la sauvegarde", "error");
     } finally {
       setSaving(false);
     }
@@ -323,10 +402,11 @@ export default function ProfilePage() {
           <div className="space-y-4 pt-2 border-t border-gray-100">
             {/* Name */}
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-1">
                 {t("profile.name")}
               </label>
               <input
+                id="profile-name"
                 type="text"
                 value={editForm.name}
                 onChange={(e) => updateEditForm("name", e.target.value)}
@@ -336,10 +416,11 @@ export default function ProfilePage() {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-1">
                 {t("profile.phone")}
               </label>
               <input
+                id="profile-phone"
                 type="tel"
                 value={editForm.phone}
                 onChange={(e) => updateEditForm("phone", e.target.value)}
@@ -351,10 +432,11 @@ export default function ProfilePage() {
             {/* City & District */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="profile-city" className="block text-sm font-medium text-gray-700 mb-1">
                   {t("profile.city")}
                 </label>
                 <select
+                  id="profile-city"
                   value={editForm.city}
                   onChange={(e) => updateEditForm("city", e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -365,10 +447,11 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="profile-district" className="block text-sm font-medium text-gray-700 mb-1">
                   {t("profile.district")}
                 </label>
                 <select
+                  id="profile-district"
                   value={editForm.district}
                   onChange={(e) => updateEditForm("district", e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -464,7 +547,7 @@ export default function ProfilePage() {
                       {t("common.edit")}
                     </Link>
                     <button
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDeleteRequest(product.id)}
                       className="px-2 py-1 text-xs text-red-500 border border-red-200 rounded-md hover:bg-red-50"
                     >
                       {t("common.delete")}
@@ -475,6 +558,85 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Keyword Alerts */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          {locale === "mg" ? "Teny fototra arahina" : "Alertes mots-cl\u00e9s"}
+        </h2>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <p className="text-sm text-gray-500 mb-4">
+            {locale === "mg"
+              ? "Hahazo fanentanana ianao rehefa misy vokatra vaovao mifanaraka amin'ireto teny fototra ireto."
+              : "Recevez une notification lorsqu\u2019un nouveau produit correspond \u00e0 vos mots-cl\u00e9s."}
+          </p>
+
+          {/* Add keyword input */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleAddKeyword(); }}
+              placeholder={locale === "mg" ? "Teny fototra vaovao..." : "Nouveau mot-cl\u00e9..."}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              maxLength={50}
+            />
+            <button
+              onClick={handleAddKeyword}
+              disabled={addingKeyword || !newKeyword.trim() || newKeyword.trim().length < 2}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+            >
+              {addingKeyword ? "..." : (locale === "mg" ? "Ampio" : "Ajouter")}
+            </button>
+          </div>
+
+          {/* Alert count */}
+          <p className="text-xs text-gray-400 mb-3">
+            {keywordAlerts.length}/30 {locale === "mg" ? "teny fototra" : "mots-cl\u00e9s"}
+          </p>
+
+          {/* Alert chips */}
+          {keywordAlerts.length === 0 ? (
+            <p className="text-sm text-gray-400 italic">
+              {locale === "mg" ? "Tsy mbola misy teny fototra" : "Aucun mot-cl\u00e9 pour le moment"}
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {keywordAlerts.map((alert) => (
+                <span
+                  key={alert.id}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary text-sm rounded-full"
+                >
+                  {alert.keyword}
+                  <button
+                    onClick={() => handleRemoveKeyword(alert.id)}
+                    className="ml-1 w-4 h-4 flex items-center justify-center rounded-full hover:bg-primary/20 transition-colors"
+                    aria-label={`Remove ${alert.keyword}`}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirm && (
+        <ConfirmDialog
+          title={locale === "mg" ? "Hamafa ny filazana" : "Supprimer l'annonce"}
+          message={locale === "mg" ? "Tena te hamafa ity filazana ity ve ianao? Tsy azo averina izany." : "Voulez-vous vraiment supprimer cette annonce ? Cette action est irr\u00e9versible."}
+          confirmLabel={locale === "mg" ? "Hamafa" : "Supprimer"}
+          cancelLabel={locale === "mg" ? "Hanafoana" : "Annuler"}
+          variant="danger"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteConfirm(null)}
+        />
       )}
     </div>
   );

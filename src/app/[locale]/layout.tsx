@@ -6,7 +6,10 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import BottomNav from "@/components/layout/BottomNav";
+import BackToTop from "@/components/ui/BackToTop";
 import SessionProvider from "@/components/SessionProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -165,11 +168,18 @@ export default async function LocaleLayout({
         />
       </head>
       <body className={`${geistSans.variable} antialiased bg-gray-50 min-h-screen flex flex-col`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-primary focus:font-medium">
+          Aller au contenu principal
+        </a>
         <SessionProvider>
           <NextIntlClientProvider messages={messages}>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <ToastProvider>
+              <Navbar />
+              <main id="main-content" className="flex-1 pb-20 lg:pb-0">{children}</main>
+              <Footer />
+              <BackToTop />
+              <BottomNav />
+            </ToastProvider>
           </NextIntlClientProvider>
         </SessionProvider>
       </body>

@@ -79,7 +79,53 @@
       "other": "Autre"
     },
     "reportDescription": "Description (optionnel)",
-    "reportSubmit": "Envoyer le signalement"
+    "reportSubmit": "Envoyer le signalement",
+    "negotiable": "Prix n\u00e9gociable",
+    "proposePrice": "Proposer un prix",
+    "bump": "Remonter l'annonce",
+    "bumpSuccess": "Annonce remont\u00e9e",
+    "bumpCooldown": "Attendre avant de remonter",
+    "leaveReview": "Laisser un avis",
+    "likes": "favoris",
+    "chats": "discussions"
+  },
+  "manner": {
+    "title": "Temp\u00e9rature de savoir-vivre",
+    "cold": "Froid",
+    "cool": "Frais",
+    "warm": "Ti\u00e8de",
+    "good": "Bien",
+    "great": "Tr\u00e8s bien",
+    "hot": "Excellent",
+    "fire": "Exceptionnel"
+  },
+  "review": {
+    "title": "Laisser un avis",
+    "aboutTransaction": "\u00C0 propos de votre transaction avec",
+    "rating": "Note",
+    "whatDidYouLike": "Qu'avez-vous appr\u00e9ci\u00e9 ?",
+    "polite": "Sympathique et poli(e)",
+    "punctual": "Ponctuel(le)",
+    "fastReply": "R\u00e9ponse rapide",
+    "asDescribed": "Produit conforme",
+    "goodPrice": "Bon prix",
+    "detailed": "Description d\u00e9taill\u00e9e",
+    "comment": "Commentaire (optionnel)",
+    "commentPlaceholder": "Partagez votre exp\u00e9rience...",
+    "submit": "Envoyer",
+    "success": "Merci pour votre avis",
+    "reviews": "avis"
+  },
+  "priceProposal": {
+    "title": "Proposer un prix",
+    "currentPrice": "Prix actuel",
+    "yourPrice": "Votre prix",
+    "enterPrice": "Entrez votre prix",
+    "reduction": "R\u00e9duction",
+    "invalidPrice": "Prix invalide",
+    "mustBeLower": "Le prix doit \u00eatre inf\u00e9rieur au prix actuel",
+    "submit": "Proposer",
+    "success": "Proposition envoy\u00e9e"
   },
   "chat": {
     "title": "Messages",
@@ -117,7 +163,8 @@
     "addImages": "Ajouter des photos",
     "publish": "Publier l'annonce",
     "success": "Annonce publiée avec succès !",
-    "error": "Erreur lors de la publication"
+    "error": "Erreur lors de la publication",
+    "negotiable": "Prix négociable"
   },
   "auth": {
     "loginTitle": "Connexion",

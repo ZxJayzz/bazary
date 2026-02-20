@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import type { Notification } from "@/types";
 import { timeAgo } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 const NAV_LINKS = [
   { key: "buySell", href: "/buy-sell", labelFr: "Acheter & Vendre", labelMg: "Hividy & Hivarotra" },
@@ -55,6 +56,7 @@ export default function Navbar() {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -113,6 +115,19 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [notifDropdownOpen]);
 
+  // Escape key handler for dropdowns and mobile menu
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setNotifDropdownOpen(false);
+        setMobileMenuOpen(false);
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
   // Fetch notifications when dropdown opens
   const openNotifDropdown = useCallback(() => {
     setNotifDropdownOpen((prev) => {
@@ -140,7 +155,7 @@ export default function Navbar() {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadNotifCount(0);
     } catch {
-      // silently fail
+      showToast("Erreur", "error");
     }
   };
 
@@ -308,7 +323,7 @@ export default function Navbar() {
 
                 {/* Notification dropdown */}
                 {notifDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden">
+                  <div className="absolute right-[-4rem] sm:right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden animate-scale-in">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                       <h3 className="font-semibold text-gray-800 text-sm">
@@ -434,7 +449,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
+        <div className="lg:hidden border-t border-gray-200 bg-white animate-slide-down">
           <div className="px-4 py-2 space-y-0.5">
             {NAV_LINKS.map((link) => (
               <Link

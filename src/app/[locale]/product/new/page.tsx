@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { CITIES, CATEGORIES } from "@/types";
 import ImageUpload, { uploadImages } from "@/components/product/ImageUpload";
+import { useToast } from "@/components/ui/Toast";
 
 export default function NewProductPage() {
   const t = useTranslations();
@@ -14,10 +15,12 @@ export default function NewProductPage() {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
     title: "",
@@ -26,12 +29,48 @@ export default function NewProductPage() {
     category: "",
     city: "Antananarivo",
     district: "",
+    negotiable: false,
   });
+
+  const validateField = (name: string, value: string) => {
+    const errors: Record<string, string> = {};
+    switch (name) {
+      case "title":
+        if (value.length < 3) errors.title = locale === "mg" ? "Lohateny fohy loatra (3 litera farafahakeliny)" : "Titre trop court (3 caract\u00e8res minimum)";
+        if (value.length > 100) errors.title = locale === "mg" ? "Lohateny lava loatra (100 litera farafahabetsany)" : "Titre trop long (100 caract\u00e8res maximum)";
+        break;
+      case "price":
+        if (!value || parseInt(value) <= 0) errors.price = locale === "mg" ? "Vidiny tsy mety" : "Prix invalide";
+        break;
+      case "description":
+        if (value.length < 10) errors.description = locale === "mg" ? "Famaritana fohy loatra" : "Description trop courte (10 caract\u00e8res minimum)";
+        break;
+    }
+    return errors;
+  };
+
+  const handleBlur = (name: string, value: string) => {
+    if (!value) return;
+    const errors = validateField(name, value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return { ...next, ...errors };
+    });
+  };
 
   const updateForm = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (field === "city") {
       setForm((prev) => ({ ...prev, district: "" }));
+    }
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     }
   };
 
@@ -57,6 +96,7 @@ export default function NewProductPage() {
         body: JSON.stringify({
           ...form,
           price: parseInt(form.price) || 0,
+          negotiable: form.negotiable,
           images: JSON.stringify(imageUrls),
           userId: session.user.id,
         }),
@@ -64,12 +104,18 @@ export default function NewProductPage() {
 
       if (res.ok) {
         setSuccess(true);
+        showToast(locale === "mg" ? "Filazana nalefa" : "Annonce publi\u00e9e avec succ\u00e8s", "success");
         setTimeout(() => router.push(`/${locale}`), 1500);
       } else {
-        setError(locale === "mg" ? "Nisy olana" : "Erreur lors de la publication");
+        const data = await res.json().catch(() => ({}));
+        const msg = data.error || (locale === "mg" ? "Nisy olana" : "Erreur lors de la publication");
+        setError(msg);
+        showToast(msg, "error");
       }
     } catch {
-      setError(locale === "mg" ? "Nisy olana" : "Erreur lors de la publication");
+      const msg = locale === "mg" ? "Nisy olana" : "Erreur lors de la publication";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -115,21 +161,27 @@ export default function NewProductPage() {
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.productTitle")}</label>
+          <label htmlFor="product-title" className="block text-sm font-medium text-gray-700 mb-1">{t("sell.productTitle")}</label>
           <input
+            id="product-title"
             type="text"
             value={form.title}
             onChange={(e) => updateForm("title", e.target.value)}
+            onBlur={(e) => handleBlur("title", e.target.value)}
             required
             placeholder={t("sell.productTitlePlaceholder")}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${fieldErrors.title ? "border-red-400" : "border-gray-300"}`}
           />
+          {fieldErrors.title && (
+            <p className="text-red-500 text-xs mt-1">{fieldErrors.title}</p>
+          )}
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.category")}</label>
+          <label htmlFor="product-category" className="block text-sm font-medium text-gray-700 mb-1">{t("sell.category")}</label>
           <select
+            id="product-category"
             value={form.category}
             onChange={(e) => updateForm("category", e.target.value)}
             required
@@ -146,42 +198,72 @@ export default function NewProductPage() {
 
         {/* Price */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.price")}</label>
+          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">{t("sell.price")}</label>
           <div className="relative">
             <input
+              id="product-price"
               type="number"
               value={form.price}
               onChange={(e) => updateForm("price", e.target.value)}
+              onBlur={(e) => handleBlur("price", e.target.value)}
               required
               min="0"
               placeholder={t("sell.pricePlaceholder")}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pr-12"
+              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pr-12 ${fieldErrors.price ? "border-red-400" : "border-gray-300"}`}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">Ar</span>
           </div>
+          {fieldErrors.price && (
+            <p className="text-red-500 text-xs mt-1">{fieldErrors.price}</p>
+          )}
+          {/* Negotiable toggle */}
+          <label className="flex items-center gap-2 cursor-pointer mt-2">
+            <input
+              type="checkbox"
+              checked={form.negotiable}
+              onChange={(e) => setForm((prev) => ({ ...prev, negotiable: e.target.checked }))}
+              className="sr-only peer"
+            />
+            <div className="w-10 h-5 bg-gray-200 peer-checked:bg-primary rounded-full relative transition-colors">
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${form.negotiable ? "translate-x-5" : ""}`} />
+            </div>
+            <span className="text-sm text-gray-600">
+              {locale === "mg" ? "Azo adim-barotra" : "Prix n\u00e9gociable"}
+            </span>
+          </label>
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.description")}</label>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="product-description" className="block text-sm font-medium text-gray-700">{t("sell.description")}</label>
+            <span className="text-xs text-gray-400">{form.description.length}/2000</span>
+          </div>
           <textarea
+            id="product-description"
             value={form.description}
             onChange={(e) => updateForm("description", e.target.value)}
+            onBlur={(e) => handleBlur("description", e.target.value)}
             required
             rows={5}
+            maxLength={2000}
             placeholder={t("sell.descriptionPlaceholder")}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+            className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none ${fieldErrors.description ? "border-red-400" : "border-gray-300"}`}
           />
+          {fieldErrors.description && (
+            <p className="text-red-500 text-xs mt-1">{fieldErrors.description}</p>
+          )}
         </div>
 
         {/* Images */}
         <ImageUpload images={imageFiles} onChange={setImageFiles} />
 
         {/* City & District */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.city")}</label>
+            <label htmlFor="product-city" className="block text-sm font-medium text-gray-700 mb-1">{t("sell.city")}</label>
             <select
+              id="product-city"
               value={form.city}
               onChange={(e) => updateForm("city", e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -192,8 +274,9 @@ export default function NewProductPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("sell.district")}</label>
+            <label htmlFor="product-district" className="block text-sm font-medium text-gray-700 mb-1">{t("sell.district")}</label>
             <select
+              id="product-district"
               value={form.district}
               onChange={(e) => updateForm("district", e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"

@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 interface Conversation {
   id: string;
@@ -37,6 +38,7 @@ export default function ChatPage() {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -92,7 +94,10 @@ export default function ChatPage() {
         setConversations(transformConversations(raw));
         setLoadingConversations(false);
       })
-      .catch(() => setLoadingConversations(false));
+      .catch(() => {
+        showToast("Erreur de chargement des conversations", "error");
+        setLoadingConversations(false);
+      });
   }, [session?.user?.id, transformConversations]);
 
   // Fetch messages for selected conversation
@@ -158,20 +163,41 @@ export default function ChatPage() {
     e.preventDefault();
     if (!newMessage.trim() || !selectedId || sending) return;
 
+    const messageContent = newMessage.trim();
     setSending(true);
+
+    // Optimistic UI: add message immediately
+    const optimisticMsg: Message = {
+      id: `temp-${Date.now()}`,
+      conversationId: selectedId,
+      senderId: session?.user?.id || "",
+      content: messageContent,
+      createdAt: new Date(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setNewMessage("");
+    setTimeout(scrollToBottom, 50);
+
     try {
       const res = await fetch(`/api/conversations/${selectedId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newMessage.trim() }),
+        body: JSON.stringify({ content: messageContent }),
       });
 
       if (res.ok) {
-        setNewMessage("");
         fetchMessages(selectedId);
+      } else {
+        // Remove optimistic message on failure
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
+        setNewMessage(messageContent);
+        showToast("Erreur d'envoi du message", "error");
       }
     } catch {
-      // silently fail
+      // Remove optimistic message on failure
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
+      setNewMessage(messageContent);
+      showToast("Erreur d'envoi du message", "error");
     } finally {
       setSending(false);
     }
@@ -206,7 +232,7 @@ export default function ChatPage() {
         {locale === "mg" ? "Resaka" : "Messages"}
       </h1>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden" style={{ height: "calc(100vh - 200px)" }}>
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-[calc(100dvh-260px)] lg:h-[calc(100dvh-200px)]">
         <div className="flex h-full">
           {/* Conversation list - hidden on mobile when chat is open */}
           <div
@@ -235,14 +261,32 @@ export default function ChatPage() {
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="p-8 text-center">
-                  <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg className="w-16 h-16 mx-auto text-gray-200 mb-4" fill="none" viewBox="0 0 80 80">
+                    <rect x="8" y="16" width="44" height="32" rx="8" stroke="currentColor" strokeWidth="2.5" fill="none" />
+                    <rect x="28" y="32" width="44" height="32" rx="8" stroke="currentColor" strokeWidth="2.5" fill="none" className="text-gray-300" />
+                    <circle cx="22" cy="32" r="2" fill="currentColor" />
+                    <circle cx="30" cy="32" r="2" fill="currentColor" />
+                    <circle cx="38" cy="32" r="2" fill="currentColor" />
                   </svg>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-600 text-sm font-medium mb-1">
                     {locale === "mg"
                       ? "Tsy mbola misy resaka"
                       : "Aucune conversation"}
                   </p>
+                  <p className="text-gray-400 text-xs mb-4">
+                    {locale === "mg"
+                      ? "Ny resaka ataonao ho hita eto"
+                      : "Vos conversations appara\u00eetront ici"}
+                  </p>
+                  <Link
+                    href={`/${locale}/buy-sell`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    {locale === "mg" ? "Hijery entana" : "Parcourir les annonces"}
+                  </Link>
                 </div>
               ) : (
                 conversations.map((conv) => (
@@ -395,14 +439,23 @@ export default function ChatPage() {
             ) : (
               /* No conversation selected */
               <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                <div className="text-center px-4">
+                  <svg className="w-20 h-20 mx-auto text-gray-200 mb-4" fill="none" viewBox="0 0 80 80">
+                    <rect x="8" y="16" width="44" height="32" rx="8" stroke="currentColor" strokeWidth="2.5" fill="none" />
+                    <rect x="28" y="32" width="44" height="32" rx="8" stroke="currentColor" strokeWidth="2.5" fill="none" className="text-gray-300" />
+                    <circle cx="22" cy="32" r="2" fill="currentColor" />
+                    <circle cx="30" cy="32" r="2" fill="currentColor" />
+                    <circle cx="38" cy="32" r="2" fill="currentColor" />
                   </svg>
-                  <p className="text-gray-500">
+                  <p className="text-gray-600 font-medium mb-1">
                     {locale === "mg"
                       ? "Misafidiana resaka iray"
-                      : "Selectionnez une conversation"}
+                      : "S\u00e9lectionnez une conversation"}
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    {locale === "mg"
+                      ? "Ny resaka ataonao ho hita eto"
+                      : "Vos conversations appara\u00eetront ici"}
                   </p>
                 </div>
               </div>

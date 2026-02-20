@@ -7,12 +7,14 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import ProductGrid from "@/components/product/ProductGrid";
 import type { Product } from "@/types";
+import { useToast } from "@/components/ui/Toast";
 
 export default function FavoritesPage() {
   const t = useTranslations();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,10 @@ export default function FavoritesPage() {
         setProducts(extractedProducts);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        showToast("Erreur de chargement des favoris", "error");
+        setLoading(false);
+      });
   }, [session?.user?.id]);
 
   if (!session) {

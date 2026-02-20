@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import type { Notification } from "@/types";
 import { timeAgo } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -52,6 +53,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
@@ -75,7 +77,7 @@ export default function NotificationsPage() {
       }
       setHasMore(items.length === LIMIT);
     } catch {
-      // silently fail
+      showToast("Erreur de chargement des notifications", "error");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -105,7 +107,7 @@ export default function NotificationsPage() {
       });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch {
-      // silently fail
+      showToast("Erreur de mise \u00e0 jour", "error");
     }
   };
 
@@ -121,7 +123,7 @@ export default function NotificationsPage() {
           prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
         );
       } catch {
-        // silently fail
+        showToast("Erreur de mise \u00e0 jour", "error");
       }
     }
     if (notif.link) {

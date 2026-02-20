@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useToast } from "@/components/ui/Toast";
 
 interface FavoriteButtonProps {
   productId: string;
@@ -13,6 +14,7 @@ export default function FavoriteButton({ productId }: FavoriteButtonProps) {
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [isFavorited, setIsFavorited] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +26,9 @@ export default function FavoriteButton({ productId }: FavoriteButtonProps) {
       .then((data) => {
         setIsFavorited(data.isFavorited);
       })
-      .catch(() => {});
+      .catch(() => {
+        showToast("Erreur de chargement du favori", "error");
+      });
   }, [session?.user?.id, productId]);
 
   const handleToggle = async (e: React.MouseEvent) => {
@@ -54,7 +58,7 @@ export default function FavoriteButton({ productId }: FavoriteButtonProps) {
         if (res.ok) setIsFavorited(true);
       }
     } catch {
-      // silently fail
+      showToast("Erreur lors de la mise \u00e0 jour du favori", "error");
     } finally {
       setLoading(false);
     }

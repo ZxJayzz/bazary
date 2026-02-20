@@ -4,13 +4,18 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { formatPrice, timeAgo, getImageUrls } from "@/lib/utils";
-import type { Product } from "@/types";
+import type { Product, Review } from "@/types";
 import { CATEGORIES } from "@/types";
 import FavoriteButton from "@/components/product/FavoriteButton";
 import ProductCard from "@/components/product/ProductCard";
+import ImageLightbox from "@/components/ui/ImageLightbox";
+import MannerTemp from "@/components/user/MannerTemp";
+import ReviewForm from "@/components/review/ReviewForm";
+import PriceProposal from "@/components/product/PriceProposal";
+import { useToast } from "@/components/ui/Toast";
 
 const BLUR_PLACEHOLDER = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+";
 
@@ -29,6 +34,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
+  const { showToast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
@@ -39,22 +45,82 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
   // Share state
   const [shareToast, setShareToast] = useState(false);
 
+  // Lightbox state
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Seller info state
+  const [sellerTemp, setSellerTemp] = useState<number>(36.5);
+  const [sellerReviews, setSellerReviews] = useState<Review[]>([]);
+  const [sellerReviewCount, setSellerReviewCount] = useState(0);
+
+  // Price proposal state
+  const [showPriceProposal, setShowPriceProposal] = useState(false);
+
+  // Review form state
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Bump state
+  const [bumping, setBumping] = useState(false);
+
   // Report state
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const reportModalRef = useRef<HTMLDivElement>(null);
+  const reportTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Escape key handler for modal and toasts
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (reportModalOpen) {
+          closeReportModal();
+        }
+        setShareToast(false);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [reportModalOpen]);
+
+  // Focus trap for report modal
+  useEffect(() => {
+    if (reportModalOpen && reportModalRef.current) {
+      const focusableElements = reportModalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      }
+    }
+    if (!reportModalOpen && reportTriggerRef.current) {
+      reportTriggerRef.current.focus();
+    }
+  }, [reportModalOpen]);
 
   useEffect(() => {
     fetch(`/api/products/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 404) {
+            setLoading(false);
+            return null;
+          }
+          throw new Error("Network error");
+        }
+        return res.json();
+      })
       .then((data) => {
-        setProduct(data);
+        if (data) setProduct(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [id]);
+      .catch(() => {
+        showToast("Erreur de chargement du produit", "error");
+        setLoading(false);
+      });
+  }, [id, showToast]);
 
   // Fetch related products
   useEffect(() => {
@@ -85,6 +151,61 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
     fetchRelated();
   }, [product]);
 
+  // Fetch seller public profile (mannerTemp, reviews)
+  useEffect(() => {
+    if (!product?.userId) return;
+    const fetchSellerInfo = async () => {
+      try {
+        const res = await fetch(`/api/users/${product.userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSellerTemp(data.mannerTemp ?? 36.5);
+          setSellerReviews(data.reviewsReceived?.slice(0, 3) ?? []);
+          setSellerReviewCount(data._count?.reviewsReceived ?? data.reviewsReceived?.length ?? 0);
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    fetchSellerInfo();
+  }, [product?.userId]);
+
+  const handleBump = async () => {
+    if (!product || bumping) return;
+    setBumping(true);
+    try {
+      const res = await fetch(`/api/products/${product.id}/bump`, { method: "POST" });
+      if (res.ok) {
+        showToast(locale === "mg" ? "Filazana nampakarina" : "Annonce remont\u00e9e", "success");
+        setProduct({ ...product, bumpedAt: new Date() });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || (locale === "mg" ? "Nisy olana" : "Erreur"), "error");
+      }
+    } catch {
+      showToast(locale === "mg" ? "Nisy olana" : "Erreur", "error");
+    } finally {
+      setBumping(false);
+    }
+  };
+
+  const canBump = (): boolean => {
+    if (!product?.bumpedAt) return true;
+    const lastBump = new Date(product.bumpedAt).getTime();
+    const now = Date.now();
+    return now - lastBump >= 24 * 60 * 60 * 1000;
+  };
+
+  const getBumpCooldown = (): string => {
+    if (!product?.bumpedAt) return "";
+    const lastBump = new Date(product.bumpedAt).getTime();
+    const diff = 24 * 60 * 60 * 1000 - (Date.now() - lastBump);
+    if (diff <= 0) return "";
+    const hours = Math.floor(diff / (60 * 60 * 1000));
+    const mins = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+    return `${hours}h${mins.toString().padStart(2, "0")}`;
+  };
+
   const handleStartChat = async () => {
     if (!session?.user?.id) {
       router.push(`/${locale}/auth/login`);
@@ -104,7 +225,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
         router.push(`/${locale}/chat`);
       }
     } catch {
-      // silently fail
+      showToast("Impossible de d\u00e9marrer la conversation", "error");
     } finally {
       setStartingChat(false);
     }
@@ -123,7 +244,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
       try {
         await navigator.share(shareData);
       } catch {
-        // User cancelled or error - silently fail
+        // User cancelled - not an error
       }
     } else {
       // Fallback: copy URL to clipboard
@@ -132,7 +253,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
         setShareToast(true);
         setTimeout(() => setShareToast(false), 2500);
       } catch {
-        // silently fail
+        showToast("Impossible de partager", "error");
       }
     }
   };
@@ -151,9 +272,12 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
       });
       if (res.ok) {
         setReportSuccess(true);
+        showToast("Signalement envoy\u00e9, merci", "success");
+      } else {
+        showToast("Erreur lors du signalement", "error");
       }
     } catch {
-      // silently fail
+      showToast("Erreur lors du signalement", "error");
     } finally {
       setReportSubmitting(false);
     }
@@ -237,7 +361,14 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Left: Images */}
         <div className="md:col-span-3">
-          <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden mb-3">
+          <div
+            className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden mb-3 cursor-pointer"
+            onClick={() => setLightboxIndex(currentImage)}
+            role="button"
+            tabIndex={0}
+            aria-label="Agrandir l'image"
+            onKeyDown={(e) => { if (e.key === "Enter") setLightboxIndex(currentImage); }}
+          >
             <Image
               src={images[currentImage] || "/images/placeholder.svg"}
               alt={product.title}
@@ -274,7 +405,31 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
         {/* Right: Info */}
         <div className="md:col-span-2">
           <h1 className="text-xl font-bold text-gray-800 mb-2">{product.title}</h1>
-          <p className="text-2xl font-bold text-primary mb-4">{formatPrice(product.price)}</p>
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-2xl font-bold text-primary">{formatPrice(product.price)}</p>
+            {product.negotiable && (
+              <span className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
+                {locale === "mg" ? "Azo adim-barotra" : "Prix n\u00e9gociable"}
+              </span>
+            )}
+          </div>
+          {product.negotiable && !isOwnProduct && (
+            <button
+              onClick={() => {
+                if (!session?.user?.id) {
+                  router.push(`/${locale}/auth/login`);
+                  return;
+                }
+                setShowPriceProposal(true);
+              }}
+              className="flex items-center justify-center gap-2 w-full mb-4 px-4 py-2.5 border border-orange-400 text-orange-600 rounded-xl text-sm font-medium hover:bg-orange-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              {locale === "mg" ? "Manolo-bidy" : "Proposer un prix"}
+            </button>
+          )}
 
           {/* Meta info */}
           <div className="space-y-3 mb-6">
@@ -318,11 +473,49 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
                     {product.user.name.charAt(0)}
                   </span>
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-gray-800">{product.user.name}</p>
                   <p className="text-xs text-gray-500">{product.user.city}</p>
                 </div>
+                <MannerTemp temperature={sellerTemp} size="sm" />
               </div>
+
+              {/* Seller reviews summary */}
+              {sellerReviewCount > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 mb-2">
+                    {locale === "mg"
+                      ? `${sellerReviewCount} hevitra`
+                      : `${sellerReviewCount} avis`}
+                  </p>
+                  <div className="space-y-2">
+                    {sellerReviews.map((review) => (
+                      <div key={review.id} className="text-xs">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <svg
+                                key={star}
+                                className={`w-3 h-3 ${star <= review.rating ? "text-yellow-400" : "text-gray-300"}`}
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                              </svg>
+                            ))}
+                          </div>
+                          {review.reviewer && (
+                            <span className="text-gray-400 ml-1">{review.reviewer.name}</span>
+                          )}
+                        </div>
+                        {review.content && (
+                          <p className="text-gray-600 line-clamp-1">{review.content}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -330,13 +523,44 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
           {isOwnProduct && (
             <Link
               href={`/${locale}/product/${product.id}/edit`}
-              className="flex items-center justify-center gap-2 w-full mb-4 px-4 py-3 border border-primary text-primary rounded-xl font-medium hover:bg-primary/5 transition-colors"
+              className="flex items-center justify-center gap-2 w-full mb-3 px-4 py-3 border border-primary text-primary rounded-xl font-medium hover:bg-primary/5 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               {t("product.edit")}
             </Link>
+          )}
+
+          {/* Bump button (owner only, available products) */}
+          {isOwnProduct && product.status === "available" && (
+            <button
+              onClick={handleBump}
+              disabled={bumping || !canBump()}
+              className="flex items-center justify-center gap-2 w-full mb-4 px-4 py-3 border border-accent text-accent rounded-xl font-medium hover:bg-accent/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              {bumping
+                ? (locale === "mg" ? "Mamatsy..." : "Chargement...")
+                : !canBump()
+                  ? `${locale === "mg" ? "Miandry" : "Attendre"} ${getBumpCooldown()}`
+                  : (locale === "mg" ? "Hampakatra ny filazana" : "Remonter l'annonce")}
+            </button>
+          )}
+
+          {/* Review button - show if product is sold and user was the buyer */}
+          {product.status === "sold" && session?.user?.id && !isOwnProduct && (
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="flex items-center justify-center gap-2 w-full mb-4 px-4 py-2.5 bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-xl text-sm font-medium hover:bg-yellow-100 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              {locale === "mg" ? "Manome hevitra" : "Laisser un avis"}
+            </button>
           )}
 
           {/* Favorite + Share + Report row */}
@@ -362,6 +586,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
               {/* Report button - only for logged-in users, not own products */}
               {session?.user && !isOwnProduct && (
                 <button
+                  ref={reportTriggerRef}
                   onClick={() => setReportModalOpen(true)}
                   className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-50 rounded-lg transition-colors"
                   title={t("product.report")}
@@ -443,17 +668,51 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
         </div>
       )}
 
+      {/* Image Lightbox */}
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={images}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
+
+      {/* Price Proposal Modal */}
+      {showPriceProposal && product && (
+        <PriceProposal
+          productId={product.id}
+          productTitle={product.title}
+          currentPrice={product.price}
+          onClose={() => setShowPriceProposal(false)}
+          onSubmitted={() => setShowPriceProposal(false)}
+          locale={locale}
+        />
+      )}
+
+      {/* Review Form Modal */}
+      {showReviewForm && product?.user && (
+        <ReviewForm
+          reviewedId={product.userId}
+          reviewedName={product.user.name}
+          productId={product.id}
+          productTitle={product.title}
+          onClose={() => setShowReviewForm(false)}
+          onSubmitted={() => setShowReviewForm(false)}
+          locale={locale}
+        />
+      )}
+
       {/* Report Modal */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 animate-backdrop-fade"
             onClick={closeReportModal}
           />
 
           {/* Modal */}
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+          <div ref={reportModalRef} className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-scale-in">
             {/* Close button */}
             <button
               onClick={closeReportModal}
@@ -471,7 +730,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 id="report-modal-title" className="text-lg font-semibold text-gray-800 mb-2">
                   {t("product.reportSuccess")}
                 </h3>
                 <button
@@ -483,7 +742,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
               </div>
             ) : (
               <>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                <h3 id="report-modal-title" className="text-lg font-semibold text-gray-800 mb-1">
                   {t("product.report")}
                 </h3>
                 <p className="text-sm text-gray-500 mb-5">

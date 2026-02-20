@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
   }
 
   // Determine sort order
-  let orderBy: Record<string, string>;
+  // Bumped products appear first (bumpedAt desc, nulls last), then by selected sort
+  let orderBy: Record<string, unknown>[] | Record<string, string>;
   switch (sort) {
     case "price_asc":
       orderBy = { price: "asc" };
@@ -55,14 +56,20 @@ export async function GET(request: NextRequest) {
       break;
     case "newest":
     default:
-      orderBy = { createdAt: "desc" };
+      orderBy = [
+        { bumpedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ];
       break;
   }
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: { user: { select: { id: true, name: true, city: true } } },
+      include: {
+        user: { select: { id: true, name: true, city: true } },
+        _count: { select: { favorites: true, conversations: true } },
+      },
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
@@ -70,8 +77,14 @@ export async function GET(request: NextRequest) {
     prisma.product.count({ where }),
   ]);
 
+  const productsWithCounts = products.map((p) => ({
+    ...p,
+    favoriteCount: p._count.favorites,
+    chatCount: p._count.conversations,
+  }));
+
   return NextResponse.json({
-    products,
+    products: productsWithCounts,
     total,
     page,
     totalPages: Math.ceil(total / limit),
@@ -81,7 +94,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, price, images, category, city, district, userId } = body;
+    const { title, description, price, images, category, city, district, userId, negotiable } = body;
 
     if (!title || !description || price === undefined || !category || !city || !userId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -96,9 +109,41 @@ export async function POST(request: NextRequest) {
         category,
         city,
         district: district || null,
+        negotiable: negotiable === true,
         userId,
       },
     });
+
+    // After creating the product, check keyword alerts
+    try {
+      const matchingAlerts = await prisma.keywordAlert.findMany({
+        where: {
+          keyword: {
+            in: product.title.toLowerCase().split(/\s+/).filter((w: string) => w.length >= 2),
+          },
+          userId: { not: product.userId },
+        },
+        include: { user: true },
+      });
+
+      // Create notifications for matching users (deduplicate by userId)
+      const notifiedUsers = new Set<string>();
+      for (const alert of matchingAlerts) {
+        if (notifiedUsers.has(alert.userId)) continue;
+        notifiedUsers.add(alert.userId);
+        await prisma.notification.create({
+          data: {
+            userId: alert.userId,
+            type: "keyword_alert",
+            title: `"${alert.keyword}"`,
+            message: product.title,
+            link: `/product/${product.id}`,
+          },
+        });
+      }
+    } catch {
+      // Don't fail product creation if notifications fail
+    }
 
     return NextResponse.json(product, { status: 201 });
   } catch (error) {

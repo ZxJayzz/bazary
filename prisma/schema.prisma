@@ -8,42 +8,51 @@ datasource db {
 }
 
 model User {
-  id                    String         @id @default(cuid())
+  id                    String          @id @default(cuid())
   name                  String
-  email                 String         @unique
+  email                 String          @unique
   password              String?
   phone                 String?
-  city                  String         @default("Antananarivo")
+  city                  String          @default("Antananarivo")
   district              String?
   image                 String?
+  mannerTemp            Float           @default(36.5)
   products              Product[]
-  buyerConversations    Conversation[] @relation("BuyerConversations")
-  sellerConversations   Conversation[] @relation("SellerConversations")
-  sentMessages          Message[]      @relation("SentMessages")
+  buyerConversations    Conversation[]  @relation("BuyerConversations")
+  sellerConversations   Conversation[]  @relation("SellerConversations")
+  sentMessages          Message[]       @relation("SentMessages")
   favorites             Favorite[]
   notifications         Notification[]
-  reports               Report[]       @relation("reports")
-  createdAt             DateTime       @default(now())
+  reports               Report[]        @relation("reports")
+  reviewsGiven          Review[]        @relation("ReviewsGiven")
+  reviewsReceived       Review[]        @relation("ReviewsReceived")
+  proposalsSent         PriceProposal[] @relation("ProposalsSent")
+  proposalsReceived     PriceProposal[] @relation("ProposalsReceived")
+  keywordAlerts         KeywordAlert[]
+  createdAt             DateTime        @default(now())
 }
 
 model Product {
-  id            String         @id @default(cuid())
+  id            String          @id @default(cuid())
   title         String
   description   String
   price         Int
-  images        String         // JSON array of image URLs
+  images        String          // JSON array of image URLs
   category      String
-  status        String         @default("available") // available, reserved, sold
+  status        String          @default("available") // available, reserved, sold
+  negotiable    Boolean         @default(false)
   city          String
   district      String?
-  views         Int            @default(0)
+  views         Int             @default(0)
   userId        String
-  user          User           @relation(fields: [userId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
   conversations Conversation[]
   favorites     Favorite[]
   reports       Report[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  proposals     PriceProposal[]
+  bumpedAt      DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 model Category {
@@ -111,4 +120,45 @@ model Report {
   description String?
   status      String   @default("pending") // pending, reviewed, resolved
   createdAt   DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  reviewerId  String
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewedId  String
+  reviewed    User     @relation("ReviewsReceived", fields: [reviewedId], references: [id])
+  productId   String
+  rating      Int      // 1-5
+  mannerItems String   // JSON array of selected manner praise items
+  content     String?  // optional text review
+  createdAt   DateTime @default(now())
+
+  @@unique([reviewerId, productId])
+}
+
+model PriceProposal {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  buyerId       String
+  buyer         User     @relation("ProposalsSent", fields: [buyerId], references: [id])
+  sellerId      String
+  seller        User     @relation("ProposalsReceived", fields: [sellerId], references: [id])
+  proposedPrice Int
+  status        String   @default("pending") // pending, accepted, rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([buyerId, productId])
+}
+
+model KeywordAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  keyword   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, keyword])
 }

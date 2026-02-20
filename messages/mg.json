@@ -79,7 +79,53 @@
       "other": "Hafa"
     },
     "reportDescription": "Fanazavana (tsy voatery)",
-    "reportSubmit": "Handefa ny fitatirana"
+    "reportSubmit": "Handefa ny fitatirana",
+    "negotiable": "Azo adim-barotra",
+    "proposePrice": "Manolo-bidy",
+    "bump": "Hampakatra ny filazana",
+    "bumpSuccess": "Filazana nampakarina",
+    "bumpCooldown": "Miandry alohan'ny hampakatra",
+    "leaveReview": "Manome hevitra",
+    "likes": "tiana",
+    "chats": "resaka"
+  },
+  "manner": {
+    "title": "Hafanana ara-fitondran-tena",
+    "cold": "Mangatsiaka",
+    "cool": "Mangatsiatsiaka",
+    "warm": "Mafana kely",
+    "good": "Tsara",
+    "great": "Tsara be",
+    "hot": "Tsara indrindra",
+    "fire": "Miavaka"
+  },
+  "review": {
+    "title": "Manome hevitra",
+    "aboutTransaction": "Momba ny fifanakalozana amin'i",
+    "rating": "Isa",
+    "whatDidYouLike": "Inona no tsara tamin'ny mpivarotra?",
+    "polite": "Tsara fanahy sy mahalala fomba",
+    "punctual": "Mahatoky fotoana",
+    "fastReply": "Mamaly haingana",
+    "asDescribed": "Entana mitovy amin'ny famaritana",
+    "goodPrice": "Vidiny mety",
+    "detailed": "Famaritana amin'ny antsipiriany",
+    "comment": "Hevitra fanampiny (tsy voatery)",
+    "commentPlaceholder": "Lazao ny fanandramanao...",
+    "submit": "Handefa",
+    "success": "Misaotra ny fanehoanao hevitra",
+    "reviews": "hevitra"
+  },
+  "priceProposal": {
+    "title": "Manolo-bidy",
+    "currentPrice": "Vidiny ankehitriny",
+    "yourPrice": "Vidiny toloranao",
+    "enterPrice": "Ampidiro ny vidiny",
+    "reduction": "Fihenana",
+    "invalidPrice": "Vidiny tsy mety",
+    "mustBeLower": "Tokony ho latsaky ny vidiny ankehitriny",
+    "submit": "Manolo-bidy",
+    "success": "Tolotra nalefa"
   },
   "chat": {
     "title": "Resaka",
@@ -117,7 +163,8 @@
     "addImages": "Manampy sary",
     "publish": "Mandefa filazana",
     "success": "Vita soa aman-tsara ny filazana!",
-    "error": "Nisy olana tamin'ny fandefasana"
+    "error": "Nisy olana tamin'ny fandefasana",
+    "negotiable": "Azo adim-barotra"
   },
   "auth": {
     "loginTitle": "Fidirana",

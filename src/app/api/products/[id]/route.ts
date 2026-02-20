@@ -12,7 +12,13 @@ export async function GET(
     where: { id },
     include: {
       user: {
-        select: { id: true, name: true, phone: true, city: true, district: true, image: true, createdAt: true },
+        select: { id: true, name: true, phone: true, city: true, district: true, image: true, mannerTemp: true, createdAt: true },
+      },
+      _count: {
+        select: {
+          favorites: true,
+          conversations: true,
+        },
       },
     },
   });
@@ -27,7 +33,11 @@ export async function GET(
     data: { views: { increment: 1 } },
   }).catch(() => {});
 
-  return NextResponse.json(product);
+  return NextResponse.json({
+    ...product,
+    favoriteCount: product._count.favorites,
+    conversationCount: product._count.conversations,
+  });
 }
 
 const VALID_STATUSES = ["available", "reserved", "sold"];
@@ -61,7 +71,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, description, price, category, city, district, images, status } = body;
+    const { title, description, price, category, city, district, images, status, negotiable } = body;
 
     // Validate title
     if (title !== undefined) {
@@ -146,6 +156,9 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
     if (images !== undefined) {
       updateData.images = Array.isArray(images) ? JSON.stringify(images) : images;
+    }
+    if (negotiable !== undefined) {
+      updateData.negotiable = negotiable === true;
     }
 
     if (Object.keys(updateData).length === 0) {

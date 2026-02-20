@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
 
 export default function LoginPage() {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,13 +31,17 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(locale === "mg" ? "Mailaka na tenimiafina diso" : "Email ou mot de passe incorrect");
+        const msg = locale === "mg" ? "Mailaka na tenimiafina diso" : "Email ou mot de passe incorrect";
+        setError(msg);
+        showToast(msg, "error");
       } else {
         router.push(`/${locale}`);
         router.refresh();
       }
     } catch {
-      setError(locale === "mg" ? "Nisy olana" : "Une erreur est survenue");
+      const msg = locale === "mg" ? "Nisy olana" : "Une erreur est survenue";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -64,8 +70,9 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.email")}</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">{t("auth.email")}</label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -75,14 +82,20 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>
+              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
+            </div>
+            <div className="flex justify-end mb-4">
+              <Link href={`/${locale}/auth/forgot-password`} className="text-xs text-primary hover:underline">
+                {locale === "mg" ? "Adino ny tenimiafina?" : "Mot de passe oublié ?"}
+              </Link>
             </div>
             <button
               type="submit"
