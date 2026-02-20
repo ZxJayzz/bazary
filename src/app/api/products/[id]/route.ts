@@ -6,38 +6,43 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      user: {
-        select: { id: true, name: true, phone: true, city: true, district: true, image: true, mannerTemp: true, createdAt: true },
-      },
-      _count: {
-        select: {
-          favorites: true,
-          conversations: true,
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: { id: true, name: true, phone: true, city: true, district: true, image: true, mannerTemp: true, createdAt: true },
+        },
+        _count: {
+          select: {
+            favorites: true,
+            conversations: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    // Increment views count (fire and forget)
+    prisma.product.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    }).catch(() => {});
+
+    return NextResponse.json({
+      ...product,
+      favoriteCount: product._count.favorites,
+      conversationCount: product._count.conversations,
+    });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  // Increment views count (fire and forget)
-  prisma.product.update({
-    where: { id },
-    data: { views: { increment: 1 } },
-  }).catch(() => {});
-
-  return NextResponse.json({
-    ...product,
-    favoriteCount: product._count.favorites,
-    conversationCount: product._count.conversations,
-  });
 }
 
 const VALID_STATUSES = ["available", "reserved", "sold"];
