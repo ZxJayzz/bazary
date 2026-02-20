@@ -16,6 +16,7 @@ model User {
   city                  String          @default("Antananarivo")
   district              String?
   image                 String?
+  role                  String          @default("user") // user, moderator, admin
   mannerTemp            Float           @default(36.5)
   products              Product[]
   buyerConversations    Conversation[]  @relation("BuyerConversations")
@@ -40,6 +41,7 @@ model Product {
   images        String          // JSON array of image URLs
   category      String
   status        String          @default("available") // available, reserved, sold
+  hidden        Boolean         @default(false)
   negotiable    Boolean         @default(false)
   city          String
   district      String?

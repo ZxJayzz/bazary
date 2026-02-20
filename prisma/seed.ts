@@ -1,8 +1,41 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create admin and moderator accounts
+  const adminPassword = await bcrypt.hash("admin123", 10);
+  const modPassword = await bcrypt.hash("mod123", 10);
+
+  await prisma.user.upsert({
+    where: { email: "admin@bazary.mg" },
+    update: { role: "admin" },
+    create: {
+      name: "Admin Bazary",
+      email: "admin@bazary.mg",
+      password: adminPassword,
+      phone: "+261 34 00 000 00",
+      city: "Antananarivo",
+      role: "admin",
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "mod@bazary.mg" },
+    update: { role: "moderator" },
+    create: {
+      name: "Moderateur Bazary",
+      email: "mod@bazary.mg",
+      password: modPassword,
+      phone: "+261 34 00 000 01",
+      city: "Antananarivo",
+      role: "moderator",
+    },
+  });
+
+  console.log("Admin and moderator accounts created");
+
   // Create categories
   const categories = [
     { name: "electronics", nameFr: "Électronique", nameMg: "Elektronika", icon: "laptop" },
@@ -383,7 +416,7 @@ async function main() {
     await prisma.product.create({ data: product });
   }
 
-  console.log("Seed completed: 10 categories, 6 users, 30 products");
+  console.log("Seed completed: 2 admin accounts, 10 categories, 6 users, 30 products");
 }
 
 main()

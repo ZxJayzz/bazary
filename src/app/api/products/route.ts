@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = {};
 
+    // Hide hidden products from public listing (admin sees all via admin API)
+    where.hidden = false;
+
     if (city) where.city = city;
     if (district) where.district = district;
     if (category) where.category = category;

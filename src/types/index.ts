@@ -6,6 +6,7 @@ export interface Product {
   images: string;
   category: string;
   status: "available" | "reserved" | "sold";
+  hidden: boolean;
   negotiable: boolean;
   city: string;
   bumpedAt: Date | null;
@@ -27,6 +28,7 @@ export interface User {
   city: string;
   district: string | null;
   image: string | null;
+  role: "user" | "moderator" | "admin";
   mannerTemp: number;
   products?: Product[];
   buyerConversations?: Conversation[];
