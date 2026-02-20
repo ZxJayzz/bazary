@@ -75,8 +75,11 @@ export default function Navbar() {
 
     const fetchUnread = () => {
       fetch("/api/conversations/unread")
-        .then((res) => res.json())
-        .then((data) => setUnreadCount(data.count || 0))
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        })
+        .then((data) => { if (data) setUnreadCount(data.count || 0); })
         .catch(() => {});
     };
 
@@ -91,8 +94,11 @@ export default function Navbar() {
 
     const fetchUnreadNotif = () => {
       fetch("/api/notifications/unread")
-        .then((res) => res.json())
-        .then((data) => setUnreadNotifCount(data.count || 0))
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        })
+        .then((data) => { if (data) setUnreadNotifCount(data.count || 0); })
         .catch(() => {});
     };
 
@@ -134,9 +140,12 @@ export default function Navbar() {
       if (!prev) {
         setNotifLoading(true);
         fetch("/api/notifications?limit=10")
-          .then((res) => res.json())
+          .then((res) => {
+            if (!res.ok) return null;
+            return res.json();
+          })
           .then((data) => {
-            setNotifications(Array.isArray(data) ? data : data.notifications || []);
+            if (data) setNotifications(Array.isArray(data) ? data : data.notifications || []);
             setNotifLoading(false);
           })
           .catch(() => setNotifLoading(false));
@@ -214,12 +223,12 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 min-w-0" role="navigation" aria-label={locale === "mg" ? "Navigasiona lehibe" : "Navigation principale"}>
+          <nav className="hidden lg:flex items-center gap-1 flex-1 min-w-0 overflow-hidden" role="navigation" aria-label={locale === "mg" ? "Navigasiona lehibe" : "Navigation principale"}>
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.key}
                 href={`/${locale}${link.href}`}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${
+                className={`px-2.5 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors shrink-0 ${
                   isActive(link.href)
                     ? "text-gray-900 bg-gray-100"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"

@@ -25,7 +25,10 @@ export default function FavoritesPage() {
     }
 
     fetch("/api/favorites")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+      })
       .then((data) => {
         // Backend returns array of favorites with product relation
         const favorites = Array.isArray(data) ? data : data.products || [];

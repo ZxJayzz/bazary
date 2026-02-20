@@ -17,8 +17,11 @@ export default function BottomNav() {
 
     const fetchUnread = () => {
       fetch("/api/conversations/unread")
-        .then((res) => res.json())
-        .then((data) => setUnreadCount(data.count || 0))
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        })
+        .then((data) => { if (data) setUnreadCount(data.count || 0); })
         .catch(() => {});
     };
 

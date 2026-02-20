@@ -71,7 +71,10 @@ export default function ProfilePage() {
   useEffect(() => {
     if (session?.user?.id) {
       fetch("/api/profile")
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed");
+          return res.json();
+        })
         .then((data) => {
           if (data.id) {
             setProfile(data);
@@ -93,7 +96,10 @@ export default function ProfilePage() {
   useEffect(() => {
     if (session?.user?.id) {
       fetch(`/api/products?userId=${session.user.id}`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed");
+          return res.json();
+        })
         .then((data) => {
           setProducts(data.products || []);
           setLoading(false);
@@ -106,7 +112,10 @@ export default function ProfilePage() {
   useEffect(() => {
     if (session?.user?.id) {
       fetch("/api/keyword-alerts")
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed");
+          return res.json();
+        })
         .then((data) => {
           if (Array.isArray(data)) {
             setKeywordAlerts(data);

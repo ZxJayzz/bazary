@@ -88,7 +88,10 @@ export default function ChatPage() {
     if (!session?.user?.id) return;
 
     fetch("/api/conversations")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+      })
       .then((data) => {
         const raw = Array.isArray(data) ? data : data.conversations || [];
         setConversations(transformConversations(raw));
@@ -105,9 +108,12 @@ export default function ChatPage() {
     (conversationId: string) => {
       if (!conversationId) return;
       fetch(`/api/conversations/${conversationId}/messages`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        })
         .then((data) => {
-          setMessages(data.messages || []);
+          if (data) setMessages(data.messages || []);
           setLoadingMessages(false);
           setTimeout(scrollToBottom, 100);
         })
@@ -139,8 +145,12 @@ export default function ChatPage() {
 
     const interval = setInterval(() => {
       fetch("/api/conversations")
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        })
         .then((data) => {
+          if (!data) return;
           const raw = Array.isArray(data) ? data : data.conversations || [];
           setConversations(transformConversations(raw));
         })

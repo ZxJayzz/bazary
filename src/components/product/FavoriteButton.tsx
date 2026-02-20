@@ -22,9 +22,12 @@ export default function FavoriteButton({ productId }: FavoriteButtonProps) {
     if (!session?.user?.id) return;
 
     fetch(`/api/favorites/${productId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
       .then((data) => {
-        setIsFavorited(data.isFavorited);
+        if (data) setIsFavorited(data.isFavorited);
       })
       .catch(() => {
         showToast("Erreur de chargement du favori", "error");
