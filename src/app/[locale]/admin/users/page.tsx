@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import UserDrawer from "@/components/admin/UserDrawer";
 
 interface UserItem {
   id: string;
@@ -41,6 +42,9 @@ export default function AdminUsersPage() {
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async (page: number, searchQuery: string) => {
     setLoading(true);
@@ -95,30 +99,32 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    setDeletingUser(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete user");
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+    } catch {
+      // Delete failed
+    } finally {
+      setDeletingUser(null);
+      setConfirmDelete(null);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(locale === "mg" ? "fr-FR" : "fr-FR", {
+    return new Date(dateStr).toLocaleDateString(locale === "mg" ? "mg" : "fr-FR", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
   };
 
-  // Only admin can access this page
-  if (userRole && userRole !== "admin") {
-    return (
-      <div className="p-6">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-          </div>
-          <h2 className="text-lg font-bold text-gray-800 mb-2">{t("accessDenied")}</h2>
-          <p className="text-gray-500">{t("accessDeniedMessage")}</p>
-        </div>
-      </div>
-    );
-  }
+  const isAdmin = userRole === "admin";
 
   return (
     <div className="p-6 space-y-6">
@@ -137,7 +143,7 @@ export default function AdminUsersPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={t("search")}
-              className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white w-64"
+              className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white w-full sm:w-64"
             />
           </div>
           <button
@@ -174,19 +180,19 @@ export default function AdminUsersPage() {
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
                     {t("name")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden md:table-cell">
                     {t("email")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden lg:table-cell">
                     {t("city")}
                   </th>
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
                     {t("role")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden lg:table-cell">
                     {t("productsCount")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden lg:table-cell">
                     {t("joinedAt")}
                   </th>
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
@@ -198,12 +204,17 @@ export default function AdminUsersPage() {
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3">
-                      <span className="font-medium text-gray-800">{user.name}</span>
+                      <button
+                        onClick={() => setDrawerUserId(user.id)}
+                        className="font-medium text-gray-800 hover:text-primary transition-colors text-left"
+                      >
+                        {user.name}
+                      </button>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-gray-600 hidden md:table-cell">
                       {user.email}
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">
                       {user.city}
                     </td>
                     <td className="px-5 py-3">
@@ -219,32 +230,66 @@ export default function AdminUsersPage() {
                         {t(user.role === "admin" ? "administrator" : user.role as "user" | "moderator")}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">
                       {user._count.products}
                     </td>
-                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap hidden lg:table-cell">
                       {formatDate(user.createdAt)}
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <label className="sr-only" htmlFor={`role-${user.id}`}>
-                          {t("changeRole")}
-                        </label>
-                        <select
-                          id={`role-${user.id}`}
-                          value={user.role}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                          disabled={changingRole === user.id || user.id === session?.user?.id}
-                          className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed bg-white"
-                        >
-                          <option value="user">{t("user")}</option>
-                          <option value="moderator">{t("moderator")}</option>
-                          <option value="admin">{t("administrator")}</option>
-                        </select>
-                        {changingRole === user.id && (
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        )}
-                      </div>
+                      {isAdmin ? (
+                        <div className="flex items-center gap-2">
+                          <label className="sr-only" htmlFor={`role-${user.id}`}>
+                            {t("changeRole")}
+                          </label>
+                          <select
+                            id={`role-${user.id}`}
+                            value={user.role}
+                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                            disabled={changingRole === user.id || user.id === session?.user?.id}
+                            className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                          >
+                            <option value="user">{t("user")}</option>
+                            <option value="moderator">{t("moderator")}</option>
+                            <option value="admin">{t("administrator")}</option>
+                          </select>
+                          {changingRole === user.id && (
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          )}
+                          {/* Delete button - not for self or other admins */}
+                          {user.id !== session?.user?.id && user.role !== "admin" && (
+                            confirmDelete === user.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  disabled={deletingUser === user.id}
+                                  className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                                >
+                                  {deletingUser === user.id ? "..." : "OK"}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDelete(null)}
+                                  className="px-2 py-1 text-xs font-medium bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                                >
+                                  X
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDelete(user.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title={t("deleteUser")}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -281,6 +326,13 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {/* User Drawer */}
+      <UserDrawer
+        userId={drawerUserId}
+        locale={locale}
+        onClose={() => setDrawerUserId(null)}
+      />
     </div>
   );
 }

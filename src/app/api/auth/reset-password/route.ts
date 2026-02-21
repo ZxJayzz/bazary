@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcryptjs";
+import { hash, compare } from "bcryptjs";
+import { randomBytes } from "crypto";
+import { validatePassword } from "@/lib/validation";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 // POST: Request password reset (generates a token)
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 3 reset requests per 15 minutes per IP
+    const ip = getClientIp(request.headers);
+    const limited = rateLimit(`reset-request:${ip}`, 3, 15 * 60 * 1000);
+    if (limited) return limited;
+
     const { email } = await request.json();
 
     if (!email) {
@@ -18,38 +26,98 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    // In production, send an email with reset link
-    // For MVP, we'll use a simple approach
-    return NextResponse.json({ success: true });
+    // Generate secure random token
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    // Invalidate any existing tokens for this user
+    await prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, used: false },
+      data: { used: true },
+    });
+
+    // Create new token
+    await prisma.passwordResetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    // In production: send email with reset link containing token
+    // For MVP/development: return token in response
+    return NextResponse.json({
+      success: true,
+      // Remove this in production - only for development
+      resetToken: process.env.NODE_ENV === "development" ? token : undefined,
+    });
   } catch (error) {
     console.error("Error requesting password reset:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// PUT: Actually reset the password (for MVP - direct reset with email + new password)
+// PUT: Actually reset the password (requires valid token)
 export async function PUT(request: NextRequest) {
   try {
-    const { email, newPassword } = await request.json();
+    const { token, newPassword } = await request.json();
 
-    if (!email || !newPassword) {
-      return NextResponse.json({ error: "Email and new password are required" }, { status: 400 });
+    if (!token || !newPassword) {
+      return NextResponse.json(
+        { error: "Token and new password are required" },
+        { status: 400 }
+      );
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    // Validate password strength
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const hashedPassword = await hash(newPassword, 12);
-    await prisma.user.update({
-      where: { email },
-      data: { password: hashedPassword },
+    // Find valid, unused, non-expired token
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true },
     });
+
+    if (!resetToken) {
+      return NextResponse.json({ error: "Invalid reset token" }, { status: 400 });
+    }
+
+    if (resetToken.used) {
+      return NextResponse.json({ error: "Token has already been used" }, { status: 400 });
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      return NextResponse.json({ error: "Token has expired" }, { status: 400 });
+    }
+
+    // Check new password is not same as current
+    if (resetToken.user.password) {
+      const isSame = await compare(newPassword, resetToken.user.password);
+      if (isSame) {
+        return NextResponse.json(
+          { error: "New password must be different from current password" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Hash and update password, mark token as used
+    const hashedPassword = await hash(newPassword, 12);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { used: true },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

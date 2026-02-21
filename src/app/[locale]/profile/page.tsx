@@ -419,7 +419,7 @@ export default function ProfilePage() {
                 type="text"
                 value={editForm.name}
                 onChange={(e) => updateEditForm("name", e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               />
             </div>
 
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                 value={editForm.phone}
                 onChange={(e) => updateEditForm("phone", e.target.value)}
                 placeholder="+261 34 00 000 00"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               />
             </div>
 
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                   id="profile-city"
                   value={editForm.city}
                   onChange={(e) => updateEditForm("city", e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 >
                   {Object.keys(CITIES).map((city) => (
                     <option key={city} value={city}>{city}</option>
@@ -463,7 +463,7 @@ export default function ProfilePage() {
                   id="profile-district"
                   value={editForm.district}
                   onChange={(e) => updateEditForm("district", e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 >
                   <option value="">{t("sell.selectDistrict")}</option>
                   {CITIES[editForm.city]?.map((district) => (
@@ -529,10 +529,10 @@ export default function ProfilePage() {
           {products.map((product) => (
             <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="flex">
-                <div className="w-32 h-32 shrink-0">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0">
                   <ProductCard product={product} />
                 </div>
-                <div className="flex-1 p-4 flex flex-col justify-between">
+                <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
                   <div>
                     <h3 className="font-medium text-gray-800">{product.title}</h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -589,7 +589,7 @@ export default function ProfilePage() {
               onChange={(e) => setNewKeyword(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleAddKeyword(); }}
               placeholder={locale === "mg" ? "Teny fototra vaovao..." : "Nouveau mot-cl\u00e9..."}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               maxLength={50}
             />
             <button

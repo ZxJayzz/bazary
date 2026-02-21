@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, isErrorResponse } from "@/lib/admin";
+import { requireModerator, isErrorResponse } from "@/lib/admin";
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await requireAdmin();
+    const authResult = await requireModerator();
     if (isErrorResponse(authResult)) return authResult;
 
     const searchParams = request.nextUrl.searchParams;

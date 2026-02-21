@@ -76,7 +76,7 @@ export default function BottomNav() {
     },
     {
       key: "chat",
-      label: "Chat",
+      label: locale === "mg" ? "Resaka" : "Chat",
       href: `/${locale}/chat`,
       active: isChat,
       icon: (

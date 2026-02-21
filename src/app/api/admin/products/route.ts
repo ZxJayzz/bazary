@@ -37,10 +37,20 @@ export async function GET(request: NextRequest) {
       where.hidden = hiddenParam === "true";
     }
 
-    const [products, total] = await Promise.all([
+    const [products, total, categoryCounts] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          images: true,
+          category: true,
+          status: true,
+          hidden: true,
+          views: true,
+          city: true,
+          createdAt: true,
           user: {
             select: {
               id: true,
@@ -49,7 +59,7 @@ export async function GET(request: NextRequest) {
             },
           },
           _count: {
-            select: { reports: true },
+            select: { reports: true, favorites: true, conversations: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -57,6 +67,10 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.product.count({ where }),
+      prisma.product.groupBy({
+        by: ["category"],
+        _count: { id: true },
+      }),
     ]);
 
     return NextResponse.json({
@@ -67,6 +81,10 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      categoryCounts: categoryCounts.map((c) => ({
+        category: c.category,
+        count: c._count.id,
+      })),
     });
   } catch (error) {
     console.error("Admin products list error:", error);

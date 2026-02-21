@@ -30,7 +30,25 @@ model User {
   proposalsSent         PriceProposal[] @relation("ProposalsSent")
   proposalsReceived     PriceProposal[] @relation("ProposalsReceived")
   keywordAlerts         KeywordAlert[]
+  passwordResetTokens   PasswordResetToken[]
   createdAt             DateTime        @default(now())
+
+  @@index([city])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
 }
 
 model Product {
@@ -55,6 +73,12 @@ model Product {
   bumpedAt      DateTime?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([category])
+  @@index([city])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Category {
@@ -87,6 +111,10 @@ model Message {
   sender         User         @relation("SentMessages", fields: [senderId], references: [id])
   read           Boolean      @default(false)
   createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
 }
 
 model Favorite {
@@ -110,6 +138,10 @@ model Notification {
   link      String?  // URL to navigate to
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
 }
 
 model Report {
@@ -122,6 +154,10 @@ model Report {
   description String?
   status      String   @default("pending") // pending, reviewed, resolved
   createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@index([reporterId])
+  @@index([status])
 }
 
 model Review {

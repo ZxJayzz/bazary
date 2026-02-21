@@ -332,7 +332,7 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
 
   const statusColors: Record<string, string> = {
     available: "bg-accent text-white",
-    reserved: "bg-yellow-500 text-white",
+    reserved: "bg-amber-500 text-white",
     sold: "bg-gray-500 text-white",
   };
 

@@ -52,7 +52,7 @@ export default function AdminSidebar({ userRole, locale }: AdminSidebarProps) {
       label: t("users"),
       icon: <UsersIcon />,
       exact: false,
-      show: userRole === "admin",
+      show: userRole === "admin" || userRole === "moderator",
     },
     {
       href: `${basePath}/products`,

@@ -25,7 +25,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { hidden, status } = body;
+    const { hidden, status, title, price, category, description } = body;
 
     const data: Record<string, unknown> = {};
 
@@ -44,9 +44,32 @@ export async function PUT(
       data.status = status;
     }
 
+    if (typeof title === "string" && title.trim()) {
+      data.title = title.trim().slice(0, 200);
+    }
+
+    if (typeof price === "number" && price > 0) {
+      data.price = price;
+    }
+
+    if (typeof category === "string" && category) {
+      const validCategories = ["vehicles", "property", "electronics", "services", "furniture", "clothing", "other"];
+      if (!validCategories.includes(category)) {
+        return NextResponse.json(
+          { error: "Invalid category" },
+          { status: 400 }
+        );
+      }
+      data.category = category;
+    }
+
+    if (typeof description === "string" && description.trim()) {
+      data.description = description.trim().slice(0, 5000);
+    }
+
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields to update. Provide hidden (boolean) or status (string)." },
+        { error: "No valid fields to update" },
         { status: 400 }
       );
     }

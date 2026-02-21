@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -17,6 +17,9 @@ const NAV_LINKS = [
   { key: "property", href: "/buy-sell?category=property", labelFr: "Immobilier", labelMg: "Trano" },
   { key: "electronics", href: "/buy-sell?category=electronics", labelFr: "Électronique", labelMg: "Elektronika" },
   { key: "services", href: "/buy-sell?category=services", labelFr: "Services", labelMg: "Serivisy" },
+];
+
+const MOBILE_EXTRA_LINKS = [
   { key: "furniture", href: "/buy-sell?category=furniture", labelFr: "Meubles", labelMg: "Fanaka" },
   { key: "clothing", href: "/buy-sell?category=clothing", labelFr: "Vêtements", labelMg: "Akanjo" },
 ];
@@ -55,6 +58,7 @@ export default function Navbar() {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
   const { showToast } = useToast();
@@ -194,9 +198,11 @@ export default function Navbar() {
   const isActive = (href: string) => {
     const fullHref = `/${locale}${href}`;
     if (href === "/buy-sell") {
-      return pathname.includes("/buy-sell") && !pathname.includes("?");
+      return pathname === `/${locale}/buy-sell` && !searchParams.has("category");
     }
-    return pathname + (typeof window !== "undefined" ? window.location.search : "") === fullHref;
+    const search = searchParams.toString();
+    const currentUrl = search ? `${pathname}?${search}` : pathname;
+    return currentUrl === fullHref;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -416,7 +422,7 @@ export default function Navbar() {
             )}
 
             {/* Admin link - only for admin/moderator */}
-            {session?.user && ((session.user as { role?: string }).role === "admin" || (session.user as { role?: string }).role === "moderator") && (
+            {session?.user && ((session.user as { role?: string })?.role === "admin" || (session.user as { role?: string })?.role === "moderator") && (
               <Link
                 href={`/${locale}/admin`}
                 className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-primary transition-colors px-2"
@@ -481,7 +487,7 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-gray-200 bg-white animate-slide-down">
           <div className="px-4 py-2 space-y-0.5">
-            {NAV_LINKS.map((link) => (
+            {[...NAV_LINKS, ...MOBILE_EXTRA_LINKS].map((link) => (
               <Link
                 key={link.key}
                 href={`/${locale}${link.href}`}
@@ -540,7 +546,7 @@ export default function Navbar() {
                 </Link>
                 <div className="border-t border-gray-100 my-1" />
                 {/* Admin link in mobile menu */}
-                {((session.user as { role?: string }).role === "admin" || (session.user as { role?: string }).role === "moderator") && (
+                {((session.user as { role?: string })?.role === "admin" || (session.user as { role?: string })?.role === "moderator") && (
                   <Link
                     href={`/${locale}/admin`}
                     className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:text-primary hover:bg-gray-50 rounded-lg"

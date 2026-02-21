@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import StatsCard from "@/components/admin/StatsCard";
 
 interface StatsData {
@@ -63,6 +64,7 @@ function SkeletonTable() {
 
 export default function AdminDashboardPage() {
   const t = useTranslations("admin");
+  const tc = useTranslations("categories");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "fr";
 
@@ -134,6 +136,7 @@ export default function AdminDashboardPage() {
             </svg>
           }
           color="bg-blue-50 text-blue-600"
+          href={`/${locale}/admin/users`}
         />
         <StatsCard
           title={t("totalProducts")}
@@ -144,6 +147,7 @@ export default function AdminDashboardPage() {
             </svg>
           }
           color="bg-green-50 text-green-600"
+          href={`/${locale}/admin/products`}
         />
         <StatsCard
           title={t("newToday")}
@@ -154,6 +158,7 @@ export default function AdminDashboardPage() {
             </svg>
           }
           color="bg-purple-50 text-purple-600"
+          href={`/${locale}/admin/users`}
         />
         <StatsCard
           title={t("pendingReports")}
@@ -164,6 +169,7 @@ export default function AdminDashboardPage() {
             </svg>
           }
           color="bg-amber-50 text-amber-600"
+          href={`/${locale}/admin/reports`}
         />
       </div>
 
@@ -171,8 +177,14 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Recent reports */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-800">{t("recentReports")}</h3>
+            <Link
+              href={`/${locale}/admin/reports`}
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              {t("viewAll")} →
+            </Link>
           </div>
           {stats.recentReports && stats.recentReports.length > 0 ? (
             <div className="overflow-x-auto">
@@ -228,8 +240,14 @@ export default function AdminDashboardPage() {
 
         {/* Recent users */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-800">{t("recentUsers")}</h3>
+            <Link
+              href={`/${locale}/admin/users`}
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              {t("viewAll")} →
+            </Link>
           </div>
           {stats.recentUsers && stats.recentUsers.length > 0 ? (
             <div className="overflow-x-auto">
@@ -250,8 +268,13 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-gray-100">
                   {stats.recentUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3 font-medium text-gray-800">
-                        {user.name}
+                      <td className="px-5 py-3">
+                        <Link
+                          href={`/${locale}/admin/users/${user.id}`}
+                          className="font-medium text-gray-800 hover:text-primary transition-colors"
+                        >
+                          {user.name}
+                        </Link>
                       </td>
                       <td className="px-5 py-3 text-gray-600">
                         {user.email}
@@ -286,7 +309,7 @@ export default function AdminDashboardPage() {
               .map((cat) => (
                 <div key={cat.category} className="flex items-center gap-3">
                   <span className="text-sm text-gray-600 w-28 shrink-0 truncate capitalize">
-                    {cat.category}
+                    {tc(cat.category as "electronics" | "vehicles" | "property" | "clothing" | "furniture" | "services" | "other")}
                   </span>
                   <div className="flex-1 h-7 bg-gray-100 rounded-full overflow-hidden">
                     <div

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -40,6 +40,8 @@ export default function AdminReportsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [hideProductOnResolve, setHideProductOnResolve] = useState<Record<string, boolean>>({});
 
+  const prevFilterRef = useRef(statusFilter);
+
   const fetchReports = useCallback(
     async (page: number) => {
       setLoading(true);
@@ -67,13 +69,15 @@ export default function AdminReportsPage() {
   );
 
   useEffect(() => {
-    fetchReports(pagination.page);
-  }, [pagination.page, fetchReports]);
+    const filterChanged = prevFilterRef.current !== statusFilter;
+    prevFilterRef.current = statusFilter;
 
-  // Reset page when filter changes
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, [statusFilter]);
+    if (filterChanged && pagination.page !== 1) {
+      setPagination((prev) => ({ ...prev, page: 1 }));
+      return;
+    }
+    fetchReports(pagination.page);
+  }, [pagination.page, fetchReports, statusFilter]);
 
   const handleUpdateStatus = async (reportId: string, newStatus: string, hideProduct?: boolean) => {
     setActionLoading(reportId);
@@ -119,7 +123,7 @@ export default function AdminReportsPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(locale === "mg" ? "fr-FR" : "fr-FR", {
+    return new Date(dateStr).toLocaleDateString(locale === "mg" ? "mg" : "fr-FR", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -145,7 +149,7 @@ export default function AdminReportsPage() {
       <h1 className="text-xl font-bold text-gray-800">{t("reports")}</h1>
 
       {/* Status tabs */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit max-w-full overflow-x-auto scrollbar-hide">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab}
@@ -157,7 +161,7 @@ export default function AdminReportsPage() {
             }`}
           >
             {tab === "all"
-              ? "All"
+              ? t("all")
               : t(tab as "pending" | "reviewed" | "resolved")}
           </button>
         ))}
@@ -188,19 +192,19 @@ export default function AdminReportsPage() {
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
                     {t("reportedProduct")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden lg:table-cell">
                     {t("reporter")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden md:table-cell">
                     {t("reportReason")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden xl:table-cell">
                     {t("description")}
                   </th>
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
                     {t("status")}
                   </th>
-                  <th className="text-left font-medium text-gray-500 px-5 py-3">
+                  <th className="text-left font-medium text-gray-500 px-5 py-3 hidden lg:table-cell">
                     {t("date")}
                   </th>
                   <th className="text-left font-medium text-gray-500 px-5 py-3">
@@ -226,13 +230,13 @@ export default function AdminReportsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">
                       {report.reporter.name}
                     </td>
-                    <td className="px-5 py-3 text-gray-600 capitalize">
+                    <td className="px-5 py-3 text-gray-600 capitalize hidden md:table-cell">
                       {report.reason}
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 hidden xl:table-cell">
                       <span
                         className="text-gray-500 truncate block max-w-[200px]"
                         title={report.description || ""}
@@ -247,7 +251,7 @@ export default function AdminReportsPage() {
                         {t(report.status as "pending" | "reviewed" | "resolved")}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap hidden lg:table-cell">
                       {formatDate(report.createdAt)}
                     </td>
                     <td className="px-5 py-3">
@@ -303,7 +307,7 @@ export default function AdminReportsPage() {
                                     [report.id]: e.target.checked,
                                   }))
                                 }
-                                className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary/20"
+                                className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary/30"
                               />
                               <span className="text-[11px] text-gray-500">
                                 {t("hideProduct")}

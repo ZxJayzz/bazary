@@ -22,7 +22,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
 
   const statusColors: Record<string, string> = {
     available: "bg-accent text-white",
-    reserved: "bg-yellow-500 text-white",
+    reserved: "bg-amber-500 text-white",
     sold: "bg-gray-500 text-white",
   };
 

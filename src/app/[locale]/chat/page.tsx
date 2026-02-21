@@ -128,13 +128,13 @@ export default function ChatPage() {
     fetchMessages(selectedId);
   }, [selectedId, fetchMessages]);
 
-  // Poll for new messages every 3 seconds
+  // Poll for new messages every 5 seconds
   useEffect(() => {
     if (!selectedId) return;
 
     const interval = setInterval(() => {
       fetchMessages(selectedId);
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [selectedId, fetchMessages]);
@@ -242,7 +242,7 @@ export default function ChatPage() {
         {locale === "mg" ? "Resaka" : "Messages"}
       </h1>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-[calc(100dvh-260px)] lg:h-[calc(100dvh-200px)]">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden h-[calc(100dvh-320px)] sm:h-[calc(100dvh-260px)] lg:h-[calc(100dvh-200px)]">
         <div className="flex h-full">
           {/* Conversation list - hidden on mobile when chat is open */}
           <div
@@ -303,8 +303,8 @@ export default function ChatPage() {
                   <button
                     key={conv.id}
                     onClick={() => handleSelectConversation(conv.id)}
-                    className={`w-full flex items-start gap-3 p-3 hover:bg-gray-50 transition-colors text-left ${
-                      selectedId === conv.id ? "bg-primary/5 border-r-2 border-primary" : ""
+                    className={`w-full flex items-start gap-3 p-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0 ${
+                      selectedId === conv.id ? "bg-primary/5 border-r-2 border-r-primary" : ""
                     }`}
                   >
                     <div className="relative w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
@@ -407,7 +407,7 @@ export default function ChatPage() {
                           >
                             <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                             <p
-                              className={`text-[10px] mt-1 ${
+                              className={`text-xs mt-1 ${
                                 isOwn ? "text-white/70" : "text-gray-400"
                               }`}
                             >
@@ -433,7 +433,7 @@ export default function ChatPage() {
                     placeholder={
                       locale === "mg" ? "Soraty ny hafatrao..." : "Tapez votre message..."
                     }
-                    className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   />
                   <button
                     type="submit"
