@@ -283,7 +283,7 @@ export default function ChatPage() {
                       ? "Tsy mbola misy resaka"
                       : "Aucune conversation"}
                   </p>
-                  <p className="text-gray-400 text-xs mb-4">
+                  <p className="text-gray-500 text-xs mb-4">
                     {locale === "mg"
                       ? "Ny resaka ataonao ho hita eto"
                       : "Vos conversations appara\u00eetront ici"}
@@ -321,12 +321,12 @@ export default function ChatPage() {
                         <p className="font-medium text-sm text-gray-800 truncate">
                           {conv.otherUser.name}
                         </p>
-                        <span className="text-xs text-gray-400 shrink-0 ml-2">
+                        <span className="text-xs text-gray-500 shrink-0 ml-2">
                           {timeAgo(conv.lastMessageAt, locale)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 truncate">{conv.lastMessage}</p>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{conv.productTitle}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{conv.productTitle}</p>
                     </div>
                     {conv.unreadCount > 0 && (
                       <span className="w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shrink-0">
@@ -384,7 +384,7 @@ export default function ChatPage() {
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-gray-500 text-sm">
                         {locale === "mg"
                           ? "Manomboka resaka..."
                           : "Commencez la conversation..."}
@@ -462,7 +462,7 @@ export default function ChatPage() {
                       ? "Misafidiana resaka iray"
                       : "S\u00e9lectionnez une conversation"}
                   </p>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-500 text-sm">
                     {locale === "mg"
                       ? "Ny resaka ataonao ho hita eto"
                       : "Vos conversations appara\u00eetront ici"}

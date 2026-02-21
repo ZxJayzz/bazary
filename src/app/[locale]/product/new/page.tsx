@@ -237,7 +237,7 @@ export default function NewProductPage() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <label htmlFor="product-description" className="block text-sm font-medium text-gray-700">{t("sell.description")}</label>
-            <span className="text-xs text-gray-400">{form.description.length}/2000</span>
+            <span className="text-xs text-gray-500">{form.description.length}/2000</span>
           </div>
           <textarea
             id="product-description"

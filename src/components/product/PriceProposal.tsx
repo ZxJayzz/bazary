@@ -102,7 +102,7 @@ export default function PriceProposal({
         <h3 id="price-proposal-title" className="text-lg font-semibold text-gray-800 mb-1">
           {locale === "mg" ? "Manolo-bidy" : "Proposer un prix"}
         </h3>
-        <p className="text-xs text-gray-400 mb-4 truncate">{productTitle}</p>
+        <p className="text-xs text-gray-500 mb-4 truncate">{productTitle}</p>
 
         {/* Current price */}
         <div className="bg-gray-50 rounded-xl p-3 mb-4">

@@ -16,7 +16,7 @@ export default function TermsPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-3xl mx-auto px-4 py-8">
-          <nav className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
             <Link href={`/${locale}`} className="hover:text-primary transition-colors">
               {t("common.siteName")}
             </Link>

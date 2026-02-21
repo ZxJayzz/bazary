@@ -128,7 +128,7 @@ export default function ReviewForm({
             ? `Momba ny fifanakalozana amin'i ${reviewedName}`
             : `\u00C0 propos de votre transaction avec ${reviewedName}`}
         </p>
-        <p className="text-xs text-gray-400 mb-4 truncate">
+        <p className="text-xs text-gray-500 mb-4 truncate">
           {productTitle}
         </p>
 
@@ -202,7 +202,7 @@ export default function ReviewForm({
             className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
             placeholder={locale === "mg" ? "Lazao ny fanandramanao..." : "Partagez votre exp\u00e9rience..."}
           />
-          <p className="text-xs text-gray-400 text-right mt-1">{content.length}/500</p>
+          <p className="text-xs text-gray-500 text-right mt-1">{content.length}/500</p>
         </div>
 
         {/* Buttons */}

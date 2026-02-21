@@ -6,8 +6,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ProductCard from "@/components/product/ProductCard";
-import { CITIES } from "@/types";
+import { CITIES, CATEGORIES } from "@/types";
+import { formatPrice, getImageUrls } from "@/lib/utils";
 import type { Product } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -31,6 +31,7 @@ interface KeywordAlertData {
 
 export default function ProfilePage() {
   const t = useTranslations();
+  const tc = useTranslations("categories");
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
@@ -38,6 +39,7 @@ export default function ProfilePage() {
   const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Profile edit state
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -329,22 +331,23 @@ export default function ProfilePage() {
       )}
 
       {/* Profile card */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-8">
+        {/* Profile header */}
+        <div className="bg-linear-to-br from-primary/5 via-white to-accent/5 px-6 pt-6 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
             {/* Avatar */}
-            <div className="relative">
+            <div className="relative shrink-0 self-center sm:self-auto">
               {avatarSrc ? (
                 <Image
                   src={avatarSrc}
                   alt={profile?.name || ""}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  width={96}
+                  height={96}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-white shadow-md"
                 />
               ) : (
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-primary font-bold text-2xl">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-primary/10 rounded-full flex items-center justify-center ring-4 ring-white shadow-md">
+                  <span className="text-primary font-bold text-3xl sm:text-4xl">
                     {(profile?.name || session.user?.name || "?").charAt(0)}
                   </span>
                 </div>
@@ -353,9 +356,9 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-hover transition-colors shadow-sm"
+                  className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-hover transition-colors shadow-md"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -371,24 +374,55 @@ export default function ProfilePage() {
             </div>
 
             {!editing && (
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">{profile?.name || session.user?.name}</h1>
-                <p className="text-sm text-gray-500">{session.user?.email}</p>
-                {(profile?.phone) && (
-                  <p className="text-sm text-gray-500">{profile.phone}</p>
-                )}
-                {(profile?.city) && (
-                  <p className="text-sm text-gray-500">
-                    {profile.district ? `${profile.district}, ${profile.city}` : profile.city}
-                  </p>
-                )}
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <h1 className="text-2xl font-bold text-gray-900">{profile?.name || session.user?.name}</h1>
+                <div className="mt-2.5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm text-gray-500 justify-center sm:justify-start">
+                    <svg className="w-4 h-4 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span className="truncate">{session.user?.email}</span>
+                  </div>
+                  {profile?.phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 justify-center sm:justify-start">
+                      <svg className="w-4 h-4 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      {profile.phone}
+                    </div>
+                  )}
+                  {profile?.city && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 justify-center sm:justify-start">
+                      <svg className="w-4 h-4 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {profile.district ? `${profile.district}, ${profile.city}` : profile.city}
+                    </div>
+                  )}
+                </div>
+
+                {/* Buttons - mobile: below info, desktop: top-right */}
+                <div className="flex items-center gap-2 mt-4 justify-center sm:hidden">
+                  <button
+                    onClick={handleEditToggle}
+                    className="flex-1 px-4 py-2.5 text-sm border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-medium"
+                  >
+                    {t("profile.edit")}
+                  </button>
+                  <button
+                    onClick={() => signOut({ callbackUrl: `/${locale}` })}
+                    className="flex-1 px-4 py-2.5 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    {t("common.logout")}
+                  </button>
+                </div>
               </div>
             )}
-          </div>
 
-          <div className="flex items-center gap-2">
+            {/* Desktop buttons */}
             {!editing && (
-              <>
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <button
                   onClick={handleEditToggle}
                   className="px-4 py-2 text-sm border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-medium"
@@ -401,16 +435,38 @@ export default function ProfilePage() {
                 >
                   {t("common.logout")}
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
 
+        {/* Stats bar */}
+        {!editing && (
+          <div className="px-6 py-3.5 flex items-center gap-6 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-2 text-sm">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <span className="font-semibold text-gray-800">{products.length}</span>
+              <span className="text-gray-500">{t("profile.myListings").toLowerCase()}</span>
+            </div>
+            {profile?.createdAt && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {locale === "mg" ? "Mpikambana nanomboka ny" : "Membre depuis"}{" "}
+                {new Date(profile.createdAt).toLocaleDateString(locale === "mg" ? "mg" : "fr-FR", { month: "long", year: "numeric" })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Edit form */}
         {editing && (
-          <div className="space-y-4 pt-2 border-t border-gray-100">
+          <div className="px-6 pb-6 space-y-4 pt-4 border-t border-gray-100">
             {/* Name */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-1">
                 {t("profile.name")}
               </label>
@@ -439,7 +495,7 @@ export default function ProfilePage() {
             </div>
 
             {/* City & District */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="profile-city" className="block text-sm font-medium text-gray-700 mb-1">
                   {t("profile.city")}
@@ -508,6 +564,42 @@ export default function ProfilePage() {
         </Link>
       </div>
 
+      {/* Category filter tabs */}
+      {!loading && products.length > 0 && (() => {
+        const usedCategories = [...new Set(products.map((p) => p.category))];
+        if (usedCategories.length <= 1) return null;
+        return (
+          <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => setCategoryFilter("all")}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                categoryFilter === "all"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {t("admin.all")} ({products.length})
+            </button>
+            {CATEGORIES.filter((cat) => usedCategories.includes(cat.name)).map((cat) => {
+              const count = products.filter((p) => p.category === cat.name).length;
+              return (
+                <button
+                  key={cat.name}
+                  onClick={() => setCategoryFilter(cat.name)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                    categoryFilter === cat.name
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {cat.icon} {tc(cat.name as "electronics" | "vehicles" | "property" | "clothing" | "furniture" | "appliances" | "sports" | "books" | "services" | "other")} ({count})
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -525,47 +617,91 @@ export default function ProfilePage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="flex">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0">
-                  <ProductCard product={product} />
-                </div>
-                <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-medium text-gray-800">{product.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {product.city}{product.district ? `, ${product.district}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <select
-                      value={product.status}
-                      onChange={(e) => handleStatusChange(product.id, e.target.value)}
-                      className="px-2 py-1 text-xs border border-gray-200 rounded-md bg-white"
-                    >
-                      <option value="available">{t("product.status.available")}</option>
-                      <option value="reserved">{t("product.status.reserved")}</option>
-                      <option value="sold">{t("product.status.sold")}</option>
-                    </select>
-                    <Link
-                      href={`/${locale}/product/${product.id}/edit`}
-                      className="px-2 py-1 text-xs text-primary border border-primary/30 rounded-md hover:bg-primary/5 transition-colors"
-                    >
-                      {t("common.edit")}
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteRequest(product.id)}
-                      className="px-2 py-1 text-xs text-red-500 border border-red-200 rounded-md hover:bg-red-50"
-                    >
-                      {t("common.delete")}
-                    </button>
+        <div className="space-y-3">
+          {products.filter((p) => categoryFilter === "all" || p.category === categoryFilter).map((product) => {
+            const images = getImageUrls(product.images);
+            const firstImage = images[0] || "/images/placeholder.svg";
+            return (
+              <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors">
+                <div className="flex">
+                  {/* Product image */}
+                  <Link
+                    href={`/${locale}/product/${product.id}`}
+                    className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 relative bg-gray-100 block"
+                  >
+                    <Image
+                      src={firstImage}
+                      alt={product.title}
+                      fill
+                      className="object-cover"
+                      sizes="144px"
+                    />
+                    {product.status !== "available" && (
+                      <span className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-semibold rounded ${
+                        product.status === "sold"
+                          ? "bg-red-500 text-white"
+                          : "bg-amber-500 text-white"
+                      }`}>
+                        {t(`product.status.${product.status}`)}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Product info */}
+                  <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                    <div>
+                      <Link
+                        href={`/${locale}/product/${product.id}`}
+                        className="font-medium text-gray-800 hover:text-primary transition-colors line-clamp-1 block"
+                      >
+                        {product.title}
+                      </Link>
+                      <p className="text-base font-semibold text-primary mt-0.5">
+                        {formatPrice(product.price)}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {product.city}{product.district ? `, ${product.district}` : ""}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <select
+                        value={product.status}
+                        onChange={(e) => handleStatusChange(product.id, e.target.value)}
+                        className="px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      >
+                        <option value="available">{t("product.status.available")}</option>
+                        <option value="reserved">{t("product.status.reserved")}</option>
+                        <option value="sold">{t("product.status.sold")}</option>
+                      </select>
+                      <Link
+                        href={`/${locale}/product/${product.id}/edit`}
+                        className="px-3 py-1.5 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
+                      >
+                        {t("common.edit")}
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteRequest(product.id)}
+                        className="px-3 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        {t("common.delete")}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+            );
+          })}
+          {products.filter((p) => categoryFilter === "all" || p.category === categoryFilter).length === 0 && (
+            <div className="text-center py-8 text-gray-500 text-sm">
+              {locale === "mg" ? "Tsy misy filazana amin'ity sokajy ity" : "Aucune annonce dans cette catégorie"}
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -602,13 +738,13 @@ export default function ProfilePage() {
           </div>
 
           {/* Alert count */}
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {keywordAlerts.length}/30 {locale === "mg" ? "teny fototra" : "mots-cl\u00e9s"}
           </p>
 
           {/* Alert chips */}
           {keywordAlerts.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">
+            <p className="text-sm text-gray-500 italic">
               {locale === "mg" ? "Tsy mbola misy teny fototra" : "Aucun mot-cl\u00e9 pour le moment"}
             </p>
           ) : (

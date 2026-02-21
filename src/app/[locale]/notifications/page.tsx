@@ -204,7 +204,7 @@ export default function NotificationsPage() {
           <p className="text-gray-500 text-lg mb-2">
             {t("notifications.noNotifications")}
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {t("notifications.emptySubtext")}
           </p>
         </div>
@@ -228,7 +228,7 @@ export default function NotificationsPage() {
                 <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">
                   {notif.message}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   {timeAgo(notif.createdAt, locale)}
                 </p>
               </div>

@@ -100,7 +100,7 @@ export default function FavoritesPage() {
               ? "Tsy mbola misy entana tiana"
               : "Aucun favori pour le moment"}
           </p>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-gray-500 text-sm mb-6">
             {locale === "mg"
               ? "Tsindrio ny fo amin'ny entana tianao"
               : "Appuyez sur le coeur pour sauvegarder vos articles preferes"}
