@@ -33,10 +33,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-      ];
+      const words = search.trim().split(/\s+/).filter((w) => w.length >= 1);
+      if (words.length > 0) {
+        where.AND = words.map((word) => ({
+          OR: [
+            { title: { contains: word, mode: "insensitive" } },
+            { description: { contains: word, mode: "insensitive" } },
+          ],
+        }));
+      }
     }
 
     if (minPrice || maxPrice) {
