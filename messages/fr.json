@@ -87,7 +87,11 @@
     "bumpCooldown": "Attendre avant de remonter",
     "leaveReview": "Laisser un avis",
     "likes": "favoris",
-    "chats": "discussions"
+    "chats": "discussions",
+    "whatsapp": "Contacter via WhatsApp",
+    "shareFacebook": "Partager sur Facebook",
+    "shareWhatsapp": "Partager sur WhatsApp",
+    "copyLink": "Copier le lien"
   },
   "manner": {
     "title": "Temp\u00e9rature de savoir-vivre",

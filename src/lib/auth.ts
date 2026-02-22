@@ -1,10 +1,20 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import FacebookProvider from "next-auth/providers/facebook";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "public_profile,email",
+        },
+      },
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -37,10 +47,49 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account }) {
+      if (account?.provider === "facebook") {
+        if (!user.email) return false;
+
+        // Find or create user in our database
+        let dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (!dbUser) {
+          dbUser = await prisma.user.create({
+            data: {
+              name: user.name || "Utilisateur",
+              email: user.email,
+              image: user.image,
+              city: "Antananarivo",
+            },
+          });
+        } else if (!dbUser.image && user.image) {
+          // Update profile image if not set
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { image: user.image },
+          });
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id as string;
-        token.role = user.role || "user";
+        if (account?.provider === "facebook") {
+          // Look up the database user to get the real ID
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+          }
+        } else {
+          token.id = user.id as string;
+          token.role = user.role || "user";
+        }
       }
       return token;
     },

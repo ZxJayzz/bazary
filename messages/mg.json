@@ -87,7 +87,11 @@
     "bumpCooldown": "Miandry alohan'ny hampakatra",
     "leaveReview": "Manome hevitra",
     "likes": "tiana",
-    "chats": "resaka"
+    "chats": "resaka",
+    "whatsapp": "Mifandraisa amin'ny WhatsApp",
+    "shareFacebook": "Zarao amin'ny Facebook",
+    "shareWhatsapp": "Zarao amin'ny WhatsApp",
+    "copyLink": "Adikao ny rohy"
   },
   "manner": {
     "title": "Hafanana ara-fitondran-tena",
