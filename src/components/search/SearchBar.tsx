@@ -7,6 +7,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const RECENT_SEARCHES_KEY = "bazary_recent_searches";
 const MAX_RECENT = 5;
 
+const SUGGESTED_KEYWORDS = [
+  { fr: "iPhone", mg: "iPhone" },
+  { fr: "Samsung", mg: "Samsung" },
+  { fr: "Voiture", mg: "Fiara" },
+  { fr: "Moto", mg: "Moto" },
+  { fr: "Appartement", mg: "Trano" },
+  { fr: "Ordinateur", mg: "Solosaina" },
+  { fr: "Télévision", mg: "Televiziona" },
+  { fr: "Réfrigérateur", mg: "Firaiketana" },
+  { fr: "Meuble", mg: "Fanaka" },
+  { fr: "Vélo", mg: "Bisikileta" },
+];
+
 const SORT_OPTIONS = [
   { value: "newest", labelFr: "Plus récent", labelMg: "Vaovao indrindra" },
   { value: "price_asc", labelFr: "Prix croissant", labelMg: "Vidiny mitombo" },
@@ -154,7 +167,8 @@ export default function SearchBar() {
     ? recentSearches.filter((s) => s.toLowerCase().includes(query.toLowerCase()))
     : recentSearches;
 
-  const showDropdown = focused && filteredRecent.length > 0;
+  const showSuggestions = focused && !query.trim() && filteredRecent.length === 0;
+  const showDropdown = focused && (filteredRecent.length > 0 || showSuggestions);
 
   const currentSortOption = SORT_OPTIONS.find((o) => o.value === currentSort) || SORT_OPTIONS[0];
 
@@ -215,42 +229,64 @@ export default function SearchBar() {
           </div>
         </form>
 
-        {/* Recent searches dropdown */}
+        {/* Search dropdown: recent searches + suggested keywords */}
         {showDropdown && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-40 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-              <span className="text-xs font-medium text-gray-500 uppercase">
-                {t("search.recentSearches")}
-              </span>
-              <button
-                onClick={handleClearAll}
-                className="text-xs text-primary hover:text-primary-hover font-medium"
-              >
-                {t("search.clearAll")}
-              </button>
-            </div>
-            <div>
-              {filteredRecent.map((search) => (
-                <button
-                  key={search}
-                  onClick={() => handleRecentClick(search)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
-                >
-                  <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="flex-1 text-sm text-gray-700 truncate">{search}</span>
+            {filteredRecent.length > 0 && (
+              <>
+                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+                  <span className="text-xs font-medium text-gray-500 uppercase">
+                    {t("search.recentSearches")}
+                  </span>
                   <button
-                    onClick={(e) => handleRemoveRecent(e, search)}
-                    className="shrink-0 p-0.5 text-gray-400 hover:text-gray-600"
+                    onClick={handleClearAll}
+                    className="text-xs text-primary hover:text-primary-hover font-medium"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    {t("search.clearAll")}
                   </button>
-                </button>
-              ))}
-            </div>
+                </div>
+                <div>
+                  {filteredRecent.map((search) => (
+                    <button
+                      key={search}
+                      onClick={() => handleRecentClick(search)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="flex-1 text-sm text-gray-700 truncate">{search}</span>
+                      <button
+                        onClick={(e) => handleRemoveRecent(e, search)}
+                        className="shrink-0 p-0.5 text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {showSuggestions && (
+              <div className="px-4 py-3">
+                <span className="text-xs font-medium text-gray-500 uppercase">
+                  {locale === "mg" ? "Teny alefa" : "Suggestions"}
+                </span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {SUGGESTED_KEYWORDS.map((kw) => (
+                    <button
+                      key={kw.fr}
+                      onClick={() => handleRecentClick(locale === "mg" ? kw.mg : kw.fr)}
+                      className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      {locale === "mg" ? kw.mg : kw.fr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
