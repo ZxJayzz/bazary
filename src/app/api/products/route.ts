@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkBannedKeywords } from "@/lib/bannedKeywords";
 
 export async function GET(request: NextRequest) {
   try {
@@ -146,6 +147,16 @@ export async function POST(request: NextRequest) {
 
     if (!title || !description || price === undefined || !category || !city || !userId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Check banned keywords in title and description
+    const bannedInTitle = checkBannedKeywords(title);
+    const bannedInDescription = checkBannedKeywords(description);
+    if (bannedInTitle || bannedInDescription) {
+      return NextResponse.json(
+        { error: "Votre annonce contient du contenu interdit", keyword: bannedInTitle || bannedInDescription },
+        { status: 403 }
+      );
     }
 
     const product = await prisma.product.create({

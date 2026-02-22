@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { checkBannedKeywords } from "@/lib/bannedKeywords";
 
 export async function GET(
   _request: NextRequest,
@@ -146,6 +147,18 @@ export async function PUT(
         return NextResponse.json(
           { error: `Status must be one of: ${VALID_STATUSES.join(", ")}` },
           { status: 400 }
+        );
+      }
+    }
+
+    // Check banned keywords
+    const textToCheck = [title, description].filter(Boolean).join(" ");
+    if (textToCheck) {
+      const banned = checkBannedKeywords(textToCheck);
+      if (banned) {
+        return NextResponse.json(
+          { error: "Votre annonce contient du contenu interdit" },
+          { status: 403 }
         );
       }
     }
