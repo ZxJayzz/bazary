@@ -32,18 +32,6 @@ export async function GET(request: NextRequest) {
       where.status = "available";
     }
 
-    if (search) {
-      const words = search.trim().split(/\s+/).filter((w) => w.length >= 1);
-      if (words.length > 0) {
-        where.AND = words.map((word) => ({
-          OR: [
-            { title: { contains: word } },
-            { description: { contains: word } },
-          ],
-        }));
-      }
-    }
-
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) (where.price as Record<string, number>).gte = parseInt(minPrice);
@@ -68,19 +56,70 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          user: { select: { id: true, name: true, city: true } },
-          _count: { select: { favorites: true, conversations: true } },
-        },
-        orderBy,
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.product.count({ where }),
-    ]);
+    const include = {
+      user: { select: { id: true, name: true, city: true } },
+      _count: { select: { favorites: true, conversations: true } },
+    };
+
+    let products;
+    let total: number;
+
+    if (search) {
+      const words = search.trim().split(/\s+/).filter((w) => w.length >= 1);
+
+      if (words.length > 0) {
+        // 1st: title-only search
+        const titleWhere = {
+          ...where,
+          AND: words.map((word) => ({ title: { contains: word } })),
+        };
+        const titleCount = await prisma.product.count({ where: titleWhere });
+
+        if (titleCount > 0) {
+          [products, total] = await Promise.all([
+            prisma.product.findMany({
+              where: titleWhere, include, orderBy,
+              skip: (page - 1) * limit, take: limit,
+            }),
+            Promise.resolve(titleCount),
+          ]);
+        } else {
+          // 2nd: expand to title OR description
+          const expandedWhere = {
+            ...where,
+            AND: words.map((word) => ({
+              OR: [
+                { title: { contains: word } },
+                { description: { contains: word } },
+              ],
+            })),
+          };
+          [products, total] = await Promise.all([
+            prisma.product.findMany({
+              where: expandedWhere, include, orderBy,
+              skip: (page - 1) * limit, take: limit,
+            }),
+            prisma.product.count({ where: expandedWhere }),
+          ]);
+        }
+      } else {
+        [products, total] = await Promise.all([
+          prisma.product.findMany({
+            where, include, orderBy,
+            skip: (page - 1) * limit, take: limit,
+          }),
+          prisma.product.count({ where }),
+        ]);
+      }
+    } else {
+      [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where, include, orderBy,
+          skip: (page - 1) * limit, take: limit,
+        }),
+        prisma.product.count({ where }),
+      ]);
+    }
 
     const productsWithCounts = products.map((p) => ({
       ...p,
