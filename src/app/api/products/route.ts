@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
       if (words.length > 0) {
         where.AND = words.map((word) => ({
           OR: [
-            { title: { contains: word, mode: "insensitive" } },
-            { description: { contains: word, mode: "insensitive" } },
+            { title: { contains: word } },
+            { description: { contains: word } },
           ],
         }));
       }
