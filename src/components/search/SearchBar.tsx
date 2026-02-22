@@ -68,7 +68,14 @@ function clearAllRecentSearches() {
   }
 }
 
-export default function SearchBar() {
+interface SearchBarProps {
+  redirectTo?: string;
+  hideSort?: boolean;
+  className?: string;
+  inputClassName?: string;
+}
+
+export default function SearchBar({ redirectTo, hideSort, className, inputClassName }: SearchBarProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
@@ -117,26 +124,33 @@ export default function SearchBar() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams(searchParams.toString());
-    if (query.trim()) {
-      params.set("search", query.trim());
-      saveRecentSearch(query.trim());
-      setRecentSearches(getRecentSearches());
+  const buildSearchUrl = useCallback((search: string) => {
+    const basePath = redirectTo || pathname;
+    const params = redirectTo ? new URLSearchParams() : new URLSearchParams(searchParams.toString());
+    if (search) {
+      params.set("search", search);
     } else {
       params.delete("search");
     }
-    router.push(`${pathname}?${params.toString()}`);
+    return `${basePath}?${params.toString()}`;
+  }, [redirectTo, pathname, searchParams]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      saveRecentSearch(query.trim());
+      setRecentSearches(getRecentSearches());
+    }
+    router.push(buildSearchUrl(query.trim()));
     setFocused(false);
     inputRef.current?.blur();
-  }, [query, searchParams, pathname, router]);
+  }, [query, buildSearchUrl, router]);
 
   const handleRecentClick = (search: string) => {
     setQuery(search);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("search", search);
-    router.push(`${pathname}?${params.toString()}`);
+    saveRecentSearch(search);
+    setRecentSearches(getRecentSearches());
+    router.push(buildSearchUrl(search));
     setFocused(false);
   };
 
@@ -173,7 +187,7 @@ export default function SearchBar() {
   const currentSortOption = SORT_OPTIONS.find((o) => o.value === currentSort) || SORT_OPTIONS[0];
 
   return (
-    <div className="flex items-center gap-3 w-full max-w-2xl mx-auto">
+    <div className={className || "flex items-center gap-3 w-full max-w-2xl mx-auto"}>
       {/* Search input with dropdown */}
       <div className="relative flex-1" ref={dropdownRef}>
         <form onSubmit={handleSubmit} className="relative" role="search" aria-label={locale === "mg" ? "Tadiavo entana" : "Rechercher des produits"}>
@@ -198,16 +212,14 @@ export default function SearchBar() {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setFocused(true)}
               placeholder={t("common.search")}
-              className="w-full pl-11 pr-12 sm:pr-28 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
+              className={inputClassName || "w-full pl-11 pr-12 sm:pr-28 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"}
             />
             {query && (
               <button
                 type="button"
                 onClick={() => {
                   setQuery("");
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.delete("search");
-                  router.push(`${pathname}?${params.toString()}`);
+                  router.push(buildSearchUrl(""));
                 }}
                 className="absolute right-12 sm:right-24 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 aria-label={locale === "mg" ? "Fafao ny fikarohana" : "Effacer la recherche"}
@@ -292,7 +304,7 @@ export default function SearchBar() {
       </div>
 
       {/* Sort dropdown */}
-      <div className="relative shrink-0" ref={sortRef}>
+      {!hideSort && <div className="relative shrink-0" ref={sortRef}>
         <button
           onClick={() => setSortOpen(!sortOpen)}
           className="flex items-center gap-1.5 px-3 py-3 border border-gray-300 rounded-xl text-sm bg-white hover:bg-gray-50 transition-colors text-gray-700 whitespace-nowrap"
@@ -327,7 +339,7 @@ export default function SearchBar() {
             ))}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

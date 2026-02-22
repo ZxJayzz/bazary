@@ -1,10 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { CATEGORIES, CITIES } from "@/types";
+import SearchBar from "@/components/search/SearchBar";
 
 const POPULAR_SEARCHES_FR = [
   "iPhone", "Samsung", "Ordinateur", "Moto", "Voiture", "Terrain",
@@ -21,20 +22,9 @@ const POPULAR_SEARCHES_MG = [
 export default function HomePage() {
   const t = useTranslations();
   const pathname = usePathname();
-  const router = useRouter();
   const locale = pathname.split("/")[1] || "fr";
-  const [searchQuery, setSearchQuery] = useState("");
 
   const popularSearches = locale === "mg" ? POPULAR_SEARCHES_MG : POPULAR_SEARCHES_FR;
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/${locale}/buy-sell?search=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      router.push(`/${locale}/buy-sell`);
-    }
-  };
 
   return (
     <div className="min-h-[80vh]">
@@ -53,34 +43,16 @@ export default function HomePage() {
           </p>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
-            <div className="relative flex items-center">
-              <svg
-                className="absolute left-4 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("common.search")}
-                className="w-full pl-12 pr-12 sm:pr-32 py-4 text-base border border-gray-200 rounded-2xl bg-white shadow-lg shadow-gray-200/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+          <div className="max-w-2xl mx-auto mb-8">
+            <Suspense>
+              <SearchBar
+                redirectTo={`/${locale}/buy-sell`}
+                hideSort
+                className="flex items-center gap-3 w-full"
+                inputClassName="w-full pl-12 pr-12 sm:pr-32 py-4 text-base border border-gray-200 rounded-2xl bg-white shadow-lg shadow-gray-200/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
-              <button
-                type="submit"
-                className="absolute right-2 px-3 sm:px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm"
-              >
-                <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span className="hidden sm:inline">{locale === "mg" ? "Tadiavo" : "Rechercher"}</span>
-              </button>
-            </div>
-          </form>
+            </Suspense>
+          </div>
 
           {/* Popular searches */}
           <div>
