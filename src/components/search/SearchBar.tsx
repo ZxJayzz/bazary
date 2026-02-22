@@ -72,11 +72,12 @@ interface SearchBarProps {
   redirectTo?: string;
   hideSort?: boolean;
   hideRecent?: boolean;
+  hideSuggestions?: boolean;
   className?: string;
   inputClassName?: string;
 }
 
-export default function SearchBar({ redirectTo, hideSort, hideRecent, className, inputClassName }: SearchBarProps) {
+export default function SearchBar({ redirectTo, hideSort, hideRecent, hideSuggestions, className, inputClassName }: SearchBarProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
@@ -183,7 +184,7 @@ export default function SearchBar({ redirectTo, hideSort, hideRecent, className,
     : recentSearches;
 
   const visibleRecent = hideRecent ? [] : filteredRecent;
-  const showSuggestions = focused && !query.trim() && visibleRecent.length === 0;
+  const showSuggestions = !hideSuggestions && focused && !query.trim() && visibleRecent.length === 0;
   const showDropdown = focused && (visibleRecent.length > 0 || showSuggestions);
 
   const currentSortOption = SORT_OPTIONS.find((o) => o.value === currentSort) || SORT_OPTIONS[0];

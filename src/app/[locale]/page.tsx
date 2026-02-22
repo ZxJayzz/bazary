@@ -49,6 +49,7 @@ export default function HomePage() {
                 redirectTo={`/${locale}/buy-sell`}
                 hideSort
                 hideRecent
+                hideSuggestions
                 className="flex items-center gap-3 w-full"
                 inputClassName="w-full pl-12 pr-12 sm:pr-32 py-4 text-base border border-gray-200 rounded-2xl bg-white shadow-lg shadow-gray-200/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
