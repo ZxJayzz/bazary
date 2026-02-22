@@ -247,10 +247,10 @@ export default function SearchBar() {
                 </div>
                 <div>
                   {filteredRecent.map((search) => (
-                    <button
+                    <div
                       key={search}
                       onClick={() => handleRecentClick(search)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left cursor-pointer"
                     >
                       <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -264,7 +264,7 @@ export default function SearchBar() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </>
