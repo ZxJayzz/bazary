@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CITIES, CATEGORIES } from "@/types";
@@ -57,6 +57,30 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Category scroll state
+  const catScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollArrows = useCallback(() => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  const scrollCategories = (dir: "left" | "right") => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -200 : 200, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    updateScrollArrows();
+    window.addEventListener("resize", updateScrollArrows);
+    return () => window.removeEventListener("resize", updateScrollArrows);
+  }, [products, loading, updateScrollArrows]);
 
   // Keyword alerts state
   const [keywordAlerts, setKeywordAlerts] = useState<KeywordAlertData[]>([]);
@@ -569,33 +593,65 @@ export default function ProfilePage() {
         const usedCategories = [...new Set(products.map((p) => p.category))];
         if (usedCategories.length <= 1) return null;
         return (
-          <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1">
-            <button
-              onClick={() => setCategoryFilter("all")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-                categoryFilter === "all"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+          <div className="relative mb-4 group">
+            {/* Left arrow */}
+            {canScrollLeft && (
+              <button
+                onClick={() => scrollCategories("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Scrollable category list */}
+            <div
+              ref={catScrollRef}
+              onScroll={updateScrollArrows}
+              onLoad={updateScrollArrows}
+              className={`flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-1 ${canScrollLeft ? "pl-9" : ""} ${canScrollRight ? "pr-9" : ""}`}
             >
-              {t("admin.all")} ({products.length})
-            </button>
-            {CATEGORIES.filter((cat) => usedCategories.includes(cat.name)).map((cat) => {
-              const count = products.filter((p) => p.category === cat.name).length;
-              return (
-                <button
-                  key={cat.name}
-                  onClick={() => setCategoryFilter(cat.name)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-                    categoryFilter === cat.name
-                      ? "bg-primary text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {cat.icon} {tc(cat.name as "electronics" | "vehicles" | "property" | "clothing" | "furniture" | "appliances" | "sports" | "books" | "services" | "other")} ({count})
-                </button>
-              );
-            })}
+              <button
+                onClick={() => setCategoryFilter("all")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                  categoryFilter === "all"
+                    ? "bg-primary text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {t("admin.all")} ({products.length})
+              </button>
+              {CATEGORIES.filter((cat) => usedCategories.includes(cat.name)).map((cat) => {
+                const count = products.filter((p) => p.category === cat.name).length;
+                return (
+                  <button
+                    key={cat.name}
+                    onClick={() => setCategoryFilter(cat.name)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                      categoryFilter === cat.name
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {cat.icon} {tc(cat.name as "electronics" | "vehicles" | "property" | "clothing" | "furniture" | "appliances" | "sports" | "books" | "services" | "other")} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right arrow */}
+            {canScrollRight && (
+              <button
+                onClick={() => scrollCategories("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         );
       })()}
