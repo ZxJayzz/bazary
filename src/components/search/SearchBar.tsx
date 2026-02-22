@@ -71,11 +71,12 @@ function clearAllRecentSearches() {
 interface SearchBarProps {
   redirectTo?: string;
   hideSort?: boolean;
+  hideRecent?: boolean;
   className?: string;
   inputClassName?: string;
 }
 
-export default function SearchBar({ redirectTo, hideSort, className, inputClassName }: SearchBarProps) {
+export default function SearchBar({ redirectTo, hideSort, hideRecent, className, inputClassName }: SearchBarProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
@@ -181,8 +182,9 @@ export default function SearchBar({ redirectTo, hideSort, className, inputClassN
     ? recentSearches.filter((s) => s.toLowerCase().includes(query.toLowerCase()))
     : recentSearches;
 
-  const showSuggestions = focused && !query.trim() && filteredRecent.length === 0;
-  const showDropdown = focused && (filteredRecent.length > 0 || showSuggestions);
+  const visibleRecent = hideRecent ? [] : filteredRecent;
+  const showSuggestions = focused && !query.trim() && visibleRecent.length === 0;
+  const showDropdown = focused && (visibleRecent.length > 0 || showSuggestions);
 
   const currentSortOption = SORT_OPTIONS.find((o) => o.value === currentSort) || SORT_OPTIONS[0];
 
@@ -244,7 +246,7 @@ export default function SearchBar({ redirectTo, hideSort, className, inputClassN
         {/* Search dropdown: recent searches + suggested keywords */}
         {showDropdown && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-40 overflow-hidden">
-            {filteredRecent.length > 0 && (
+            {visibleRecent.length > 0 && (
               <>
                 <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
                   <span className="text-xs font-medium text-gray-500 uppercase">
@@ -258,7 +260,7 @@ export default function SearchBar({ redirectTo, hideSort, className, inputClassN
                   </button>
                 </div>
                 <div>
-                  {filteredRecent.map((search) => (
+                  {visibleRecent.map((search) => (
                     <div
                       key={search}
                       onClick={() => handleRecentClick(search)}
