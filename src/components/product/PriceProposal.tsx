@@ -25,7 +25,7 @@ export default function PriceProposal({
   const [proposedPrice, setProposedPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const discounts = [10, 20, 30];
+  const discounts = [5, 10, 15];
 
   const applyDiscount = (percent: number) => {
     const discounted = Math.round(currentPrice * (1 - percent / 100));
@@ -137,11 +137,13 @@ export default function PriceProposal({
           </label>
           <div className="relative">
             <input
-              type="number"
-              value={proposedPrice}
-              onChange={(e) => setProposedPrice(e.target.value)}
-              min="1"
-              max={currentPrice - 1}
+              type="text"
+              inputMode="numeric"
+              value={proposedPrice ? Number(proposedPrice).toLocaleString("fr-FR") : ""}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9]/g, "");
+                setProposedPrice(raw);
+              }}
               placeholder={locale === "mg" ? "Ampidiro ny vidiny" : "Entrez votre prix"}
               className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pr-12 ${
                 proposedPrice && !isValid ? "border-red-400" : "border-gray-300"
