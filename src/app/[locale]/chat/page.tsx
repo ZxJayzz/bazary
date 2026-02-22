@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -36,6 +36,7 @@ export default function ChatPage() {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "fr";
   const { data: session } = useSession();
   const { showToast } = useToast();
@@ -47,10 +48,13 @@ export default function ChatPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   };
 
   // Transform raw API conversation to our interface
@@ -94,8 +98,16 @@ export default function ChatPage() {
       })
       .then((data) => {
         const raw = Array.isArray(data) ? data : data.conversations || [];
-        setConversations(transformConversations(raw));
+        const transformed = transformConversations(raw);
+        setConversations(transformed);
         setLoadingConversations(false);
+
+        // Auto-select conversation from URL query param
+        const urlId = searchParams.get("id");
+        if (urlId && !selectedId && transformed.some((c) => c.id === urlId)) {
+          setSelectedId(urlId);
+          setMobileShowChat(true);
+        }
       })
       .catch(() => {
         showToast("Erreur de chargement des conversations", "error");
@@ -377,7 +389,7 @@ export default function ChatPage() {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                   {loadingMessages ? (
                     <div className="flex justify-center py-8">
                       <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
@@ -418,7 +430,7 @@ export default function ChatPage() {
                       );
                     })
                   )}
-                  <div ref={messagesEndRef} />
+                  <div />
                 </div>
 
                 {/* Message input */}

@@ -224,7 +224,8 @@ export default function ProductDetailClient({ params }: { params: Promise<{ id: 
         }),
       });
       if (res.ok) {
-        router.push(`/${locale}/chat`);
+        const data = await res.json();
+        router.push(`/${locale}/chat?id=${data.id}`);
       }
     } catch {
       showToast("Impossible de d\u00e9marrer la conversation", "error");
