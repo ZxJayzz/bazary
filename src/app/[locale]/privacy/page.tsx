@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "fr";
 
-  const lastUpdated = "20 fevrier 2026";
+  const lastUpdated = "22 fevrier 2026";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,6 +62,11 @@ export default function PrivacyPage() {
                       {locale === "mg"
                         ? "Ity politika ity dia manazava ny fomba fanangonana, fitahirizana ary fampiasana ny angon-datanao manokana rehefa mampiasa ny sehatra Bazary ianao."
                         : "Cette politique explique comment nous collectons, stockons et utilisons vos donnees personnelles lorsque vous utilisez la plateforme Bazary."}
+                    </p>
+                    <p className="mt-2">
+                      {locale === "mg"
+                        ? "Ity politika ity dia napetraka araka ny Lalana n°2014-038 tamin'ny 9 janoary 2015 momba ny fiarovana ny angon-daty manokana eto Madagasikara."
+                        : "Cette politique est etablie conformement a la Loi n°2014-038 du 9 janvier 2015 relative a la protection des donnees a caractere personnel de Madagascar."}
                     </p>
                   </div>
                 </div>
@@ -118,6 +123,11 @@ export default function PrivacyPage() {
                     {locale === "mg" ? "Telefaonina" : "Telephone"} : +261 34 00 000 00
                   </p>
                 </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {locale === "mg"
+                    ? "Manam-pahefana mpanara-maso: CMIL (Commission Malagasy de l'Informatique et des Libertes), ny sampan-draharaha mahaleo tena miandraikitra ny fiarovana ny angon-daty manokana eto Madagasikara, araka ny Andininy faha-28 amin'ny Lalana n°2014-038."
+                    : "Autorite de controle competente : CMIL (Commission Malagasy de l'Informatique et des Libertes), l'autorite independante chargee de la protection des donnees a caractere personnel a Madagascar, instituee par l'Article 28 de la Loi n°2014-038."}
+                </p>
               </div>
             </section>
 
@@ -250,6 +260,16 @@ export default function PrivacyPage() {
                     </div>
                   ))}
                 </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {locale === "mg"
+                    ? "Fototra ara-dalana amin'ny fanodinana : Araka ny Lalana n°2014-038 (Andininy faha-14), ny fanodinana ny angon-datanao dia miorina amin'ny : ny fanekenao mazava rehefa misoratra anarana ; ny fanatanterahana ny fifanarahana (CGU) ; ny adidinay ara-dalana ; ny tombontsoay ara-dalana anananay (fiarovana sy fanatsarana ny serivisy)."
+                    : "Base juridique du traitement : Conformement a la Loi n°2014-038 (Article 14), le traitement de vos donnees repose sur : votre consentement explicite lors de l'inscription ; l'execution du contrat (CGU) ; nos obligations legales ; notre interet legitime (securite et amelioration du service)."}
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {locale === "mg"
+                    ? "Declaration prealable : Araka ny Andininy faha-43 sy faha-45 amin'ny Lalana n°2014-038, ny Bazary dia nanao ny filazana voalohany tokony hatao amin'ny CMIL momba ny fanodinana ny angon-daty manokana."
+                    : "Declaration prealable : Conformement aux Articles 43 et 45 de la Loi n°2014-038, Bazary a effectue la declaration prealable requise aupres de la CMIL relative au traitement des donnees a caractere personnel."}
+                </p>
               </div>
             </section>
 
@@ -379,6 +399,13 @@ export default function PrivacyPage() {
                     </div>
                   ))}
                 </div>
+                <div className="bg-accent/5 rounded-xl p-4 border border-accent/10">
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {locale === "mg"
+                      ? "Fampahafantarana raha misy fandikana : Raha misy fandikan-dalana momba ny angon-daty manokana mety hiteraka loza amin'ny zonao sy ny fahalalahananao, ny Bazary dia manaiky ny : hampahafantatra ny CMIL (Commission Malagasy de l'Informatique et des Libertes) haingana araka izay azo atao ; hampahafantatra ny mpampiasa voakasika raha misy loza lehibe ; handray ny fepetra rehetra ilaina mba hamerana ny vokatr'ilay fandikana."
+                      : "Notification en cas de violation : En cas de violation de donnees personnelles susceptible d'engendrer un risque pour vos droits et libertes, Bazary s'engage a : notifier la CMIL (Commission Malagasy de l'Informatique et des Libertes) dans les meilleurs delais ; informer les utilisateurs concernes si la violation presente un risque eleve ; prendre toutes les mesures necessaires pour limiter les consequences de la violation."}
+                  </p>
+                </div>
               </div>
             </section>
 
@@ -439,6 +466,11 @@ export default function PrivacyPage() {
                       : "Nous vous repondrons dans un delai de 30 jours."}
                   </p>
                 </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {locale === "mg"
+                    ? "Zo hitaraina : Raha mihevitra ianao fa ny fanodinana ny angon-datanao dia tsy mifanaraka amin'ny Lalana n°2014-038, manana zo ianao hitaraina ao amin'ny CMIL (Commission Malagasy de l'Informatique et des Libertes)."
+                    : "Droit de reclamation : Si vous estimez que le traitement de vos donnees n'est pas conforme a la Loi n°2014-038, vous avez le droit de deposer une reclamation aupres de la CMIL (Commission Malagasy de l'Informatique et des Libertes)."}
+                </p>
               </div>
             </section>
 
@@ -508,8 +540,8 @@ export default function PrivacyPage() {
               <div className="text-sm text-gray-600 leading-relaxed space-y-3">
                 <p>
                   {locale === "mg"
-                    ? "Ny angon-datanao dia mety hovoatahiry amin'ny server any ivelan'i Madagasikara (indrindra ho an'ny hosting). Amin'izany tranga izany, miantoka izahay fa ny fiarovana ny angon-datanao dia mifanaraka amin'ny fepetra voalaza ato amin'ity politika ity."
-                    : "Vos donnees peuvent etre stockees sur des serveurs situes en dehors de Madagascar (notamment pour l'hebergement). Dans ce cas, nous veillons a ce que la protection de vos donnees soit conforme aux conditions decrites dans la presente politique."}
+                    ? "Ny angon-datanao dia mety hovoatahiry amin'ny server any ivelan'i Madagasikara (indrindra ho an'ny hosting). Araka ny Andininy faha-20 amin'ny Lalana n°2014-038, ny famindrana dia tsy atao raha tsy miantoka fiarovana sahaza ny firenena mpandray, na misy fepetra manokana (fifanarahana ara-kontrata, fanekenan'ny CMIL, na fanekenao mazava)."
+                    : "Vos donnees peuvent etre stockees sur des serveurs situes en dehors de Madagascar (notamment pour l'hebergement). Conformement a l'Article 20 de la Loi n°2014-038, les transferts ne sont effectues que si le pays destinataire assure un niveau de protection adequat, ou sous garanties appropriees (clauses contractuelles, autorisation de la CMIL, ou votre consentement explicite)."}
                 </p>
               </div>
             </section>

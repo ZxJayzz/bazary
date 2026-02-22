@@ -39,7 +39,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}`} className="hover:text-white transition-colors">
+                <Link href={`/${locale}/help`} className="hover:text-white transition-colors">
                   {t("footer.help")}
                 </Link>
               </li>

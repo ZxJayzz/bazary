@@ -130,7 +130,7 @@ export default function BottomNav() {
               key={tab.key}
               href={tab.href}
               className={`relative flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1.5 transition-colors ${
-                tab.active ? "text-primary" : "text-gray-400"
+                tab.active ? "text-primary" : "text-gray-500"
               }`}
               aria-label={tab.label}
               aria-current={tab.active ? "page" : undefined}

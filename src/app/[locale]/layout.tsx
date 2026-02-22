@@ -167,7 +167,7 @@ export default async function LocaleLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
-      <body className={`${geistSans.variable} antialiased bg-gray-50 min-h-screen flex flex-col`}>
+      <body className={`${geistSans.variable} antialiased bg-white min-h-screen flex flex-col`}>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-primary focus:font-medium">
           {locale === "mg" ? "Mandehana any amin'ny votoatiny" : "Aller au contenu principal"}
         </a>

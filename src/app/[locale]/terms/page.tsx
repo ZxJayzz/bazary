@@ -9,7 +9,7 @@ export default function TermsPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "fr";
 
-  const lastUpdated = "20 fevrier 2026";
+  const lastUpdated = "22 fevrier 2026";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,6 +63,10 @@ export default function TermsPage() {
                   locale === "mg" ? "Fananana ara-tsaina" : "Propriete intellectuelle",
                   locale === "mg" ? "Famerana andraikitra" : "Limitation de responsabilite",
                   locale === "mg" ? "Fanafoahana" : "Resiliation",
+                  locale === "mg" ? "Fanonerana" : "Indemnisation",
+                  locale === "mg" ? "Herin'ny natiora" : "Force majeure",
+                  locale === "mg" ? "Fanovana ny CGU" : "Modification des CGU",
+                  locale === "mg" ? "Lalana fototra" : "References legales",
                   locale === "mg" ? "Lalana ampiharina" : "Droit applicable",
                 ].map((title, idx) => (
                   <li key={idx}>
@@ -93,6 +97,11 @@ export default function TermsPage() {
                   {locale === "mg"
                     ? "Ny Bazary dia sehatra fifandraisana mampifandray ny mpampiasa te hivarotra sy hividy entana eo an-toerana. Ny Bazary dia tsy mpandrindra ny varotra ary tsy miantoka ny fifanarahana eo amin'ny mpampiasa."
                     : "Bazary est une plateforme de mise en relation entre utilisateurs souhaitant vendre et acheter des biens localement. Bazary n'est pas partie prenante dans les transactions et ne garantit pas les accords entre utilisateurs."}
+                </p>
+                <p>
+                  {locale === "mg"
+                    ? "Araka ny Lalana n°2014-025 momba ny sonia elektronika, ny fisoratana anarana ao amin'ny Sehatra sy ny fanekena ireto CGU ireto amin'ny alalan'ny elektronika (famoronana kaonty) dia mitovy lanja ara-dalana amin'ny sonia an-tanana."
+                    : "Conformement a la Loi n°2014-025 relative a la signature electronique, l'inscription sur la Plateforme et l'acceptation des presentes CGU par voie electronique (creation de compte) ont la meme valeur juridique qu'une signature manuscrite."}
                 </p>
               </div>
             </section>
@@ -180,6 +189,11 @@ export default function TermsPage() {
                     </li>
                   ))}
                 </ul>
+                <p>
+                  {locale === "mg"
+                    ? "Araka ny Lalana n°2014-024 momba ny fifanakalozana elektronika, ny Bazary dia miasa amin'ny maha-mpampiantrano sy mpanelanelana ara-teknika fotsiny. Ny Bazary dia tsy mpivarotra, tsy mpividy, ary tsy andaniny amin'ny fifanakalozana rehetra eo amin'ny mpampiasa. Ity sata maha-mpanelanelana ity dia mametra ny andraikitry ny Bazary araka ny lalana velona."
+                    : "Conformement a la Loi n°2014-024 sur les transactions electroniques, Bazary agit exclusivement en qualite d'hebergeur et d'intermediaire technique. Bazary n'est ni vendeur, ni acheteur, ni partie a quelque transaction que ce soit entre utilisateurs. Ce statut d'intermediaire limite la responsabilite de Bazary conformement au cadre legal applicable."}
+                </p>
               </div>
             </section>
 
@@ -482,10 +496,116 @@ export default function TermsPage() {
               </div>
             </section>
 
-            {/* Article 12 - Droit applicable */}
+            {/* Article 12 - Indemnisation */}
             <section id="article-12">
               <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
                 <span className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-sm font-bold">12</span>
+                {locale === "mg" ? "Fanonerana" : "Indemnisation"}
+              </h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+                <p>
+                  {locale === "mg"
+                    ? "Ny Mpampiasa dia manaiky hanolo-tena sy hanafaka ny Bazary, ny mpitantana, ny mpiasa ary ny mpiara-miasa amin'ny Bazary, amin'ny fitakiana, fatiantoka, simba na fandaniana rehetra (anisan'izany ny saram-pitsarana) vokatry ny:"
+                    : "L'Utilisateur s'engage a indemniser et a degager de toute responsabilite Bazary, ses dirigeants, employes et partenaires, contre toute reclamation, perte, dommage ou depense (y compris les frais juridiques) resultant de :"}
+                </p>
+                <ul className="space-y-2 ml-4">
+                  {(locale === "mg"
+                    ? [
+                        "Fandikana ireto CGU ireto",
+                        "Fampiasana tsy ara-dalana ny Sehatra",
+                        "Famoahana votoatiny tsy ara-dalana na manohintohina ny zon'ny olon-kafa",
+                        "Fifanakalozana rehetra natao tamin'ny mpampiasa hafa",
+                      ]
+                    : [
+                        "La violation des presentes CGU par l'Utilisateur",
+                        "L'utilisation abusive de la Plateforme",
+                        "La publication de contenus illicites ou portant atteinte aux droits de tiers",
+                        "Toute transaction effectuee avec d'autres utilisateurs",
+                      ]
+                  ).map((item, idx) => (
+                    <li key={idx} className="flex gap-2">
+                      <span className="text-primary font-bold">-</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
+            {/* Article 13 - Force majeure */}
+            <section id="article-13">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-sm font-bold">13</span>
+                {locale === "mg" ? "Herin'ny natiora" : "Force majeure"}
+              </h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+                <p>
+                  {locale === "mg"
+                    ? "Ny Bazary dia tsy tompon'andraikitra amin'ny fahatarana na tsy fahatanterahana ny adidiny vokatry ny herin'ny natiora, anisan'izany:"
+                    : "Bazary ne saurait etre tenu responsable de tout retard ou manquement dans l'execution de ses obligations resultant d'evenements de force majeure, incluant notamment :"}
+                </p>
+                <ul className="space-y-2 ml-4">
+                  {(locale === "mg"
+                    ? [
+                        "Loza voajanahary (rivo-doza, tondra-drano, horohorontany)",
+                        "Fahatapahan'ny herinaratra na ny fifandraisana",
+                        "Valan'aretina",
+                        "Korontana, ady na asan-jiolahy",
+                        "Fanapahan-kevitry ny governemanta",
+                        "Ny zava-drehetra tsy azo nampoizina sy tsy azo anoherana",
+                      ]
+                    : [
+                        "Catastrophes naturelles (cyclones, inondations, seismes)",
+                        "Pannes d'electricite ou de telecommunications",
+                        "Pandemies ou epidemies",
+                        "Troubles civils, guerres ou actes de terrorisme",
+                        "Decisions gouvernementales ou reglementaires",
+                        "Tout autre evenement imprevisible, irresistible et exterieur",
+                      ]
+                  ).map((item, idx) => (
+                    <li key={idx} className="flex gap-2">
+                      <span className="text-primary font-bold">-</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+
+            {/* Article 14 - Modification des CGU */}
+            <section id="article-14">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-sm font-bold">14</span>
+                {locale === "mg" ? "Fanovana ny CGU" : "Modification des CGU"}
+              </h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+                <p>
+                  {locale === "mg"
+                    ? "Ny Bazary dia mitana ny zony hanova ireto CGU ireto amin'ny fotoana rehetra. Ny fanovana dia ho hita heriny raha vao navoaka ao amin'ny Sehatra. Ny mpampiasa dia hampahafantarina ny fanovana lehibe amin'ny alalan'ny fampahafantarana ao amin'ny Sehatra na amin'ny mailaka. Ny fitohizan'ny fampiasana ny Sehatra aorian'ny fampahafantarana dia midika fanekena ny CGU vaovao. Raha tsy manaiky, ny Mpampiasa dia afaka mamafa ny kaontiny."
+                    : "Bazary se reserve le droit de modifier les presentes CGU a tout moment. Les modifications prendront effet des leur publication sur la Plateforme. Les utilisateurs seront informes des modifications substantielles par notification sur la Plateforme ou par email. La poursuite de l'utilisation de la Plateforme apres notification des modifications vaut acceptation des nouvelles CGU. En cas de desaccord, l'Utilisateur peut supprimer son compte."}
+                </p>
+              </div>
+            </section>
+
+            {/* Article 15 - References legales */}
+            <section id="article-15">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-sm font-bold">15</span>
+                {locale === "mg" ? "Lalana fototra" : "References legales"}
+              </h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+                <p>
+                  {locale === "mg"
+                    ? "Ireto CGU ireto dia napetraka mifanaraka amin'ny lalana malagasy velona, indrindra ny Lalana n°2014-024 momba ny fifanakalozana elektronika, ny Lalana n°2014-006 momba ny heloka amin'ny aterineto, ny Lalana n°2014-025 momba ny sonia elektronika, ny Lalana n°2014-038 momba ny fiarovana ny angon-daty manokana, ary ny Lalana n°2015-014 momba ny fiarovana ny mpanjifa."
+                    : "Les presentes CGU sont etablies en conformite avec les lois malgaches applicables, notamment la Loi n°2014-024 sur les transactions electroniques, la Loi n°2014-006 sur la cybercriminalite, la Loi n°2014-025 sur la signature electronique, la Loi n°2014-038 sur la protection des donnees personnelles, et la Loi n°2015-014 sur la protection des consommateurs."}
+                </p>
+              </div>
+            </section>
+
+            {/* Article 16 - Droit applicable */}
+            <section id="article-16">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-sm font-bold">16</span>
                 {locale === "mg" ? "Lalana ampiharina" : "Droit applicable"}
               </h2>
               <div className="text-sm text-gray-600 leading-relaxed space-y-3">

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import type { Notification } from "@/types";
 import { timeAgo } from "@/lib/utils";
@@ -392,7 +392,7 @@ export default function Navbar() {
                               <p className="text-xs text-gray-500 truncate mt-0.5">
                                 {notif.message}
                               </p>
-                              <p className="text-xs text-gray-400 mt-1">
+                              <p className="text-xs text-gray-500 mt-1">
                                 {timeAgo(notif.createdAt, locale)}
                               </p>
                             </div>
@@ -569,6 +569,14 @@ export default function Navbar() {
             >
               {session?.user ? t("common.myProfile") : t("common.login")}
             </Link>
+            {session?.user && (
+              <button
+                onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: `/${locale}` }); }}
+                className="w-full text-left px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                {t("common.logout")}
+              </button>
+            )}
           </div>
         </div>
       )}
